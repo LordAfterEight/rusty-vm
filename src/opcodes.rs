@@ -1,3 +1,9 @@
+// NOTE: CPU OPCODES
+
+// --- OpCodes: NoOp
+/// OpCode: No operation. SImply doesn't do anything except increasing the instruction pointer
+pub const NO_OPERAT: u16 = 0x0000;
+
 // --- OpCodes: Load into Register ---
 /// OpCode: Loads the following value into A register
 pub const LOAD_AREG: u16 = 0x0001;
@@ -28,3 +34,14 @@ pub const JMP_TO_AD: u16 = 0x0020;
 /// OpCode: Fetches the value previously pushed to the stack and sets the instruction pointer to
 ///         it, returning to where the program came from.
 pub const RET_TO_OR: u16 = 0x0031;
+
+// --- OpCodes: Update GPU ---
+/// OpCode: This sets the value at 0x
+pub const UPDAT_GPU: u16 = 0x00A0;
+
+// NOTE: GPU OPCODES
+// TODO:
+
+// --- OpCodes: NoOP ---
+/// GPU OpCode: This simply makes the GPU do nothing
+pub const GPU_NO_OPERAT: u16 = 0xA000;

@@ -23,7 +23,7 @@ impl CPU {
             name: String::from("OwO CPU"),
 
             instr_ptr: 0xFFF0,
-            stack_ptr: 0x00, // 0x00 - 0xFF => 0 - 255, so 256 16-bit addresses in the stack
+            stack_ptr: 0x00, // 0x00 - 0x1FF => 0 - 511, so 512 16-bit addresses in the stack
 
             a_reg: Default::default(),
             x_reg: Default::default(),
@@ -31,14 +31,14 @@ impl CPU {
 
             halt_flag: false,
 
-            clock_speed: 4, // in Hz
+            clock_speed: 1, // in Hz
         }
     }
 
     pub fn increase_instr_ptr(&mut self) {
         match self.instr_ptr {
             0xFFFE => {
-                self.instr_ptr = 0x0100;
+                self.instr_ptr = 0x0200;
                 #[cfg(debug_assertions)]
                 crate::debug!("Reached end of memory");
             },
@@ -112,9 +112,13 @@ impl CPU {
                 self.instr_ptr = memory.memory[self.stack_ptr as usize];
                 self.increase_instr_ptr();
             }
+            UPDAT_GPU => {
+                #[cfg(debug_assertions)]
+                crate::debug!("Updating GPU");
+            }
             _ => {}
         }
 
-        std::thread::sleep(std::time::Duration::from_millis(1000 / self.clock_speed as u64));
+        std::thread::sleep(std::time::Duration::from_micros(1_000_000 / self.clock_speed as u64));
     }
 }

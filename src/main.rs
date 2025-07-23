@@ -3,6 +3,20 @@ mod gpu;
 mod memory;
 mod opcodes;
 
+// --- Use Font Size of 20 to have 40 rows and 63 collumns
+pub const FONT_SIZE: f32 = 20.0;
+
+// NOTE: MEMORY LAYOUT
+// 0x0000 - 0x01FF | STACK (512 16-bit / 1024B)
+// 0x0200 - 0x0219 | A-Z
+// 0x021A - 0x021F | ! " # $ [ ]
+// 0x0220 - 0x0239 | a-z
+// 0x023A - 0x023F | / < > = - ~
+// 0x0240 - 0x0249 | 0 - 9
+// 0x024A - 0x024F | : _ | & ? @
+// 0x0250          | EMPTY CHAR (0x0020)
+// 0x0300 - 0x04FF | GPU BUFFER (512 16-bit / 1024B)
+
 fn window_setup() -> macroquad::window::Conf {
     macroquad::window::Conf {
         window_title: "Rusty VM".to_string(),
@@ -18,13 +32,13 @@ async fn main() {
     let mut cpu = cpu::CPU::init();
     let mut gpu = gpu::GPU::init();
     let mut mem = memory::Memory::init();
+    mem.dump();
 
     #[cfg(debug_assertions)]
     debug!(cpu);
 
     loop {
-        cpu.update(&mut mem);
-        gpu.update(&mut mem);
+        if cpu.halt_flag == false { cpu.update(&mut mem); }
         macroquad::window::next_frame().await;
     }
 }
