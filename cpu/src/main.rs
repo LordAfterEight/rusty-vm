@@ -1,5 +1,4 @@
 mod cpu;
-mod gpu;
 mod memory;
 mod opcodes;
 
@@ -17,29 +16,16 @@ pub const FONT_SIZE: f32 = 20.0;
 // 0x0250          | EMPTY CHAR (0x0020)
 // 0x0300 - 0x04FF | GPU BUFFER (512 16-bit / 1024B)
 
-fn window_setup() -> macroquad::window::Conf {
-    macroquad::window::Conf {
-        window_title: "Rusty VM".to_string(),
-        window_width: 640,
-        window_height: 480,
-        window_resizable: false,
-        ..Default::default()
-    }
-}
-
-#[macroquad::main(window_setup())]
-async fn main() {
-    let mut cpu = cpu::CPU::init();
-    let mut gpu = gpu::GPU::init();
+fn main() {
     let mut mem = memory::Memory::init();
-    mem.dump();
+    let mut cpu = cpu::CPU::init();
+    //mem.dump();
 
     #[cfg(debug_assertions)]
     debug!(cpu);
 
     loop {
         if cpu.halt_flag == false { cpu.update(&mut mem); }
-        macroquad::window::next_frame().await;
     }
 }
 
@@ -49,13 +35,13 @@ macro_rules! debug {
     ($val0:expr) => {
         use colored::Colorize;
         let a = format!("{:?}", $val0).cyan();
-        println!("{}: {}", format!("[DEBUG]").green(), a);
+        println!("{}: {}", format!("[CPU DEBUG]").green(), a);
     };
     ($val0:expr, $val1:expr) => {
         use colored::Colorize;
         let a = format!("{:?}", $val0).cyan();
         let b = format!("{:?}", $val1).yellow();
-        println!("{}: {} | {}", format!("[DEBUG]").green(), a, b);
+        println!("{}: {} | {}", format!("[CPU DEBUG]").green(), a, b);
     }
 }
 
