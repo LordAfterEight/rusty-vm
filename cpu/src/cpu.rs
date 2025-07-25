@@ -21,6 +21,8 @@ pub struct CPU {
 
     pub clock_speed: usize, // in Hz
 
+    pub memory: crate::memory::Memory,
+
     // --- GPU Child
     pub gpu: Option<Child>,
 }
@@ -30,6 +32,7 @@ impl CPU {
         let path = format!("{}/../gpu/target/debug/rusty-vm_gpu", env!("CARGO_MANIFEST_DIR"));
         #[cfg(debug_assertions)]
         crate::debug!("Getting external GPU process from: ", path);
+
         let gpu = Some(
             Command::new(path)
             .spawn()
@@ -48,7 +51,9 @@ impl CPU {
 
             halt_flag: false,
 
-            clock_speed: 1, // in Hz
+            clock_speed: 2, // in Hz
+
+            memory: crate::memory::Memory::init(),
 
             gpu,
         }
@@ -57,7 +62,7 @@ impl CPU {
     pub fn increase_instr_ptr(&mut self) {
         match self.instr_ptr {
             0xFFFE => {
-                self.instr_ptr = 0x0200;
+                self.instr_ptr = 0x0500;
                 #[cfg(debug_assertions)]
                 crate::debug!("Reached end of memory");
             }
@@ -80,71 +85,101 @@ impl CPU {
     }
 
     /// Reads the value at the address the instruction pointer is pointing to and returns it
-    pub fn read_word(&mut self, memory: &crate::memory::Memory) -> u16 {
-        let return_value = memory.memory[self.instr_ptr as usize];
+    pub fn read_word(&mut self) -> u16 {
+        let return_value = self.memory.memory[self.instr_ptr as usize];
         self.increase_instr_ptr();
         return_value
     }
 
-    pub fn update(&mut self, memory: &mut crate::memory::Memory) {
-        #[cfg(debug_assertions)]
-        crate::debug!(&self);
-        let instruction = self.read_word(memory);
+    pub fn update(&mut self) {
+        let instruction = self.read_word();
         match instruction {
             // --- Load the next value into one of the registers ---
             LOAD_AREG => {
                 #[cfg(debug_assertions)]
                 crate::debug!(
                     "Loading value into A Register: ",
-                    crate::hex!(memory.memory[self.instr_ptr as usize])
+                    crate::hex!(self.memory.memory[self.instr_ptr as usize])
                 );
-                self.a_reg = self.read_word(memory);
-            }
+                self.a_reg = self.read_word();
+            },
             LOAD_XREG => {
                 #[cfg(debug_assertions)]
                 crate::debug!(
                     "Loading value into X Register: ",
-                    crate::hex!(memory.memory[self.instr_ptr as usize])
+                    crate::hex!(self.memory.memory[self.instr_ptr as usize])
                 );
-                self.x_reg = self.read_word(memory)
-            }
+                self.x_reg = self.read_word()
+            },
             LOAD_YREG => {
                 #[cfg(debug_assertions)]
                 crate::debug!(
                     "Loading value into Y Register: ",
-                    crate::hex!(memory.memory[self.instr_ptr as usize])
+                    crate::hex!(self.memory.memory[self.instr_ptr as usize])
                 );
-                self.y_reg = self.read_word(memory)
-            }
+                self.y_reg = self.read_word()
+            },
+
+            // --- Store the saved value into the memory at the following address ---
+            STOR_AREG => {
+                #[cfg(debug_assertions)]
+                crate::debug!(
+                    "Storing A register value to address: ",
+                    crate::hex!(self.memory.memory[self.instr_ptr as usize])
+                );
+                let address = self.read_word();
+                self.memory.memory[address as usize] = self.a_reg;
+            },
+            STOR_XREG => {
+                #[cfg(debug_assertions)]
+                crate::debug!(
+                    "Storing X register value to address: ",
+                    crate::hex!(self.memory.memory[self.instr_ptr as usize])
+                );
+                let address = self.read_word();
+                self.memory.memory[address as usize] = self.x_reg;
+            },
+            STOR_YREG => {
+                #[cfg(debug_assertions)]
+                crate::debug!(
+                    "Storing Y register value to address: ",
+                    crate::hex!(self.memory.memory[self.instr_ptr as usize])
+                );
+                let address = self.read_word();
+                self.memory.memory[address as usize] = self.y_reg;
+            },
 
             // --- Subroutine Things ---
             JMP_TO_SR => {
                 #[cfg(debug_assertions)]
                 crate::debug!(
                     "Jumping to Subroutine at: ",
-                    crate::hex!(memory.memory[self.instr_ptr as usize])
+                    crate::hex!(self.memory.memory[self.instr_ptr as usize])
                 );
-                memory.memory[self.stack_ptr as usize] = self.instr_ptr;
+                self.memory.memory[self.stack_ptr as usize] = self.instr_ptr;
                 self.increase_stack_ptr();
-                self.instr_ptr = self.read_word(memory)
-            }
+                self.instr_ptr = self.read_word()
+            },
             RET_TO_OR => {
                 self.decrease_stack_ptr();
                 #[cfg(debug_assertions)]
                 crate::debug!(
                     "Returning to:",
-                    crate::hex!(memory.memory[self.stack_ptr as usize])
+                    crate::hex!(self.memory.memory[self.stack_ptr as usize])
                 );
-                self.instr_ptr = memory.memory[self.stack_ptr as usize];
+                self.instr_ptr = self.memory.memory[self.stack_ptr as usize];
                 self.increase_instr_ptr();
-            }
-            UPDAT_GPU => {
+            },
+
+            // --- GPU Things ---
+            GPU_UPDATE => {
                 #[cfg(debug_assertions)]
                 crate::debug!("Updating GPU");
-            }
+            },
             _ => {}
         }
 
+        self.memory.update();
         std::thread::sleep(std::time::Duration::from_micros(
             1_000_000 / self.clock_speed as u64,
         ));

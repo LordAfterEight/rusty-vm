@@ -35,9 +35,7 @@ pub const JMP_TO_AD: u16 = 0x0020;
 ///         it, returning to where the program came from.
 pub const RET_TO_OR: u16 = 0x0031;
 
-// --- OpCodes: Update GPU ---
-/// OpCode: This sets the value at 0x
-pub const UPDAT_GPU: u16 = 0x00A0;
+
 
 // NOTE: GPU OPCODES
 // TODO:
@@ -51,3 +49,15 @@ pub const GPU_NO_OPERAT: u16 = 0xA000;
 ///             screen, automatically moving the cursor. If the value is invalid, it will output
 ///             a medium shade ('▒') character.
 pub const GPU_DRAW_LETT: u16 = 0xA001;
+
+// --- OpCodes: Reset Buf Ptr ---
+/// GPU OpCode: Resets the GPU's buf_ptr to the beginning of the GPU buffer.
+pub const GPU_RESET_PTR: u16 = 0xA0A2;
+
+// --- OpCodes: Update GPU ---
+/// GPU OpCode: This sets the value at 0x
+pub const GPU_UPDATE: u16 = 0xA002;
+
+// --- OpCodes: Reset Frame Buffer ---
+/// GPU OpCode: This clears the GPU's frame buffer
+pub const GPU_RES_F_BUF: u16 = 0xA0A3;

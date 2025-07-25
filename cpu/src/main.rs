@@ -17,15 +17,16 @@ pub const FONT_SIZE: f32 = 20.0;
 // 0x0300 - 0x04FF | GPU BUFFER (512 16-bit / 1024B)
 
 fn main() {
-    let mut mem = memory::Memory::init();
     let mut cpu = cpu::CPU::init();
     //mem.dump();
 
     #[cfg(debug_assertions)]
-    debug!(cpu);
+    debug!(format!("{}",
+        cpu.instr_ptr
+    ));
 
     loop {
-        if cpu.halt_flag == false { cpu.update(&mut mem); }
+        if cpu.halt_flag == false { cpu.update(); }
     }
 }
 

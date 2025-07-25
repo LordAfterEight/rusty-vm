@@ -32,6 +32,7 @@ async fn main() {
     let mut gpu = gpu::GPU::init();
     #[cfg(debug_assertions)]
     debug!("GPU initialized");
+    macroquad::window::next_frame().await;
     loop {
         //#[cfg(debug_assertions)]
         //debug!(gpu);
@@ -40,9 +41,7 @@ async fn main() {
             std::process::exit(0);
         }
 
-        gpu.update();
-
-        macroquad::window::next_frame().await;
+        gpu.update().await;
     }
 }
 
