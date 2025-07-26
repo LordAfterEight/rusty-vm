@@ -20,12 +20,13 @@ fn main() {
     let mut cpu = cpu::CPU::init();
     //mem.dump();
 
-    #[cfg(debug_assertions)]
-    debug!(format!("{}",
-        cpu.instr_ptr
-    ));
 
     loop {
+        #[cfg(debug_assertions)]
+        debug!(
+            "CPU instruction pointer: ",
+            format!("{:#06X}", cpu.instr_ptr)
+        );
         if cpu.halt_flag == false { cpu.update(); }
     }
 }

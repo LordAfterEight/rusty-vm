@@ -1,0 +1,19 @@
+// --- VALUE TYPES ---
+//
+// --- Literals ---
+// lit => following value is a literal. Will be converted like this:
+//     ... lit   F => 0x000F instead of 0x0046
+//
+// Multi-character literals will also be taken as is:
+//     ... lit D4B => 0x0D4B
+//
+// Literals can also just be hexadecimal values:
+//     ... lit 0xF0F0
+//
+// --- Hexadecimals ---
+// hex => following value will be converted to its hexadecimal representation:
+//     ... hex U => 0x0055
+
+load A hex U
+load X hex W
+load Y hex U

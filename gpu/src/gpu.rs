@@ -11,13 +11,14 @@ pub struct GPU {
     pub cursor: Cursor,
     pub draw_mode: bool,
     pub clock_speed: usize,
+    pub counter: usize,
 }
 
 impl GPU {
     pub fn init() -> Self {
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../memory.img", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/../memory", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         let mut file = img;
@@ -30,7 +31,8 @@ impl GPU {
             frame_buffer: [[Character::new(' '); 40]; 63],
             cursor: Cursor::init(),
             draw_mode: false,
-            clock_speed: 2, // In Hz
+            clock_speed: 10, // In Hz
+            counter: 0,
         }
     }
 
@@ -42,10 +44,43 @@ impl GPU {
         }
     }
 
+    pub async fn draw_framebuffer(&mut self) {
+        macroquad::text::draw_text(
+            &format!("{}", "_") as &str,
+            self.cursor.position.0 as f32 * 11.0,
+            self.cursor.position.1 as f32 * 13.0 + 12.0,
+            FONT_SIZE,
+            macroquad::color::WHITE
+        );
+        for y in 0..40 {
+            for x in 0..63 {
+                macroquad::text::draw_text(
+                    &format!("{}", self.frame_buffer[x][y].literal) as &str,
+                    x as f32 * 11.0,
+                    y as f32 * 13.0 + 12.0,
+                    FONT_SIZE,
+                    self.frame_buffer[x][y].color
+                );
+            }
+        }
+        macroquad::window::next_frame().await;
+    }
+
     pub async fn update(&mut self) {
+
+        self.counter += 1;
+
+        if self.counter == 99 {
+            if macroquad::input::is_key_pressed(macroquad::input::KeyCode::Escape) {
+                std::process::exit(0);
+            }
+            self.draw_framebuffer().await;
+            self.counter = 0;
+        }
+
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../memory.img", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/../memory", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         let mut file = img;
@@ -63,9 +98,9 @@ impl GPU {
                 .unwrap()
                 .to_string();
 
-            let trimmed = instruction_string.trim_start_matches("0x");
+            let trimmed = instruction_string.trim_start_matches("");
 
-            let instruction = u16::from_str_radix(trimmed, 16).unwrap();
+            let instruction = u16::from_str_radix(trimmed, 2).unwrap();
 
             #[cfg(debug_assertions)]
             crate::debug!(
@@ -127,18 +162,7 @@ impl GPU {
                         #[cfg(debug_assertions)]
                         crate::debug!("Redrawing the screen");
                         // --- Render FrameBuffer ---
-                        for y in 0..40 {
-                            for x in 0..63 {
-                                macroquad::text::draw_text(
-                                    &format!("{}", self.frame_buffer[x][y].literal) as &str,
-                                    x as f32 * 11.0,
-                                    y as f32 * 13.0 + 12.0,
-                                    FONT_SIZE,
-                                    self.frame_buffer[x][y].color
-                                );
-                            }
-                        }
-                        macroquad::window::next_frame().await;
+                        self.draw_framebuffer().await;
                         self.increase_buf_ptr();
                     },
                     opcodes::GPU_RES_F_BUF => {

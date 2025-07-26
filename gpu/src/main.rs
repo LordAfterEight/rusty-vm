@@ -26,7 +26,6 @@ pub const FONT_SIZE: f32 = 20.0;
 // 0x0250          | EMPTY CHAR (0x0020)
 // 0x0300 - 0x04FF | GPU BUFFER (512 16-bit / 1024B)
 
-
 #[macroquad::main(window_config())]
 async fn main() {
     let mut gpu = gpu::GPU::init();
@@ -34,13 +33,6 @@ async fn main() {
     debug!("GPU initialized");
     macroquad::window::next_frame().await;
     loop {
-        //#[cfg(debug_assertions)]
-        //debug!(gpu);
-
-        if macroquad::input::is_key_pressed(macroquad::input::KeyCode::Q) {
-            std::process::exit(0);
-        }
-
         gpu.update().await;
     }
 }
