@@ -27,12 +27,14 @@ pub struct CPU {
 
 impl CPU {
     pub fn init() -> Self {
-        #[cfg(debug_assertions)]
-        {
-            let path = format!(
-                "{}/../gpu/target/release/rusty-vm_gpu",
-                env!("CARGO_MANIFEST_DIR")
-            );
+
+        let path = format!(
+            "{}/../gpu/target/release/rusty-vm_gpu",
+            env!("CARGO_MANIFEST_DIR")
+        );
+
+        #[cfg(not(target_os = "android"))] {
+            #[cfg(debug_assertions)]
             crate::debug!("Getting external GPU process from: ", path);
             _ = Some(Command::new(path).spawn().unwrap());
         }
@@ -41,7 +43,7 @@ impl CPU {
             name: String::from("OwO CPU"),
 
             instr_ptr: 0x0500, // NOTE: Code space is 0x0500 - 0xFFFE => So 64254 spaces for programs
-            stack_ptr: 0x00, // NOTE: 0x00 - 0x1FF => 0 - 511, so 512 16-bit addresses in the stack
+            stack_ptr: 0x00,   // NOTE: 0x00 - 0x1FF => 0 - 511, so 512 16-bit addresses in the stack
 
             a_reg: Default::default(),
             x_reg: Default::default(),
@@ -170,21 +172,39 @@ impl CPU {
             COMP_REGS => {
                 let mut text_1 = String::new();
                 let mut text_2 = String::new();
-                let val_1 = self.read_word();
-                let val_2 = self.read_word();
+                let mut val_1 = self.read_word();
+                let mut val_2 = self.read_word();
 
                 match val_1 {
-                    0x0041 => text_1 = "Register A".to_string(),
-                    0x0058 => text_1 = "Register X".to_string(),
-                    0x0059 => text_1 = "Register Y".to_string(),
-                    _ => text_1 = format!("Value {}", val_1)
+                    0x0041 => {
+                        text_1 = "Register A".to_string();
+                        val_1 = self.a_reg;
+                    },
+                    0x0058 => {
+                        text_1 = "Register X".to_string();
+                        val_1 = self.x_reg;
+                    },
+                    0x0059 => {
+                        text_1 = "Register Y".to_string();
+                        val_1 = self.y_reg;
+                    },
+                    _ => text_1 = format!("Value {:#06X}", val_1)
                 };
 
                 match val_2 {
-                    0x0041 => text_2 = "Register A".to_string(),
-                    0x0058 => text_2 = "Register X".to_string(),
-                    0x0059 => text_2 = "Register Y".to_string(),
-                    _ => text_2 = format!("Value {}", val_2)
+                    0x0041 => {
+                        text_2 = "Register A".to_string();
+                        val_2 = self.a_reg;
+                    },
+                    0x0058 => {
+                        text_2 = "Register X".to_string();
+                        val_2 = self.x_reg;
+                    },
+                    0x0059 => {
+                        text_2 = "Register Y".to_string();
+                        val_2 = self.y_reg;
+                    },
+                    _ => text_2 = format!("Value {:#06X}", val_2)
                 };
 
                 if val_1 == val_2 {

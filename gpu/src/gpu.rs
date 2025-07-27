@@ -53,7 +53,7 @@ impl GPU {
         if self.cursor_visible {
             macroquad::text::draw_text(
                 &format!("{}", "_") as &str,
-                self.cursor.position.0 as f32 * 8.0,
+                self.cursor.position.0 as f32 * 7.0,
                 self.cursor.position.1 as f32 * 12.0 + 10.0,
                 FONT_SIZE,
                 macroquad::color::Color::new(0.4,0.4,0.4,1.0)
@@ -63,7 +63,7 @@ impl GPU {
             for x in 0..63 {
                 macroquad::text::draw_text(
                     &format!("{}", self.frame_buffer[x][y].literal) as &str,
-                    x as f32 * 8.0,
+                    x as f32 * 7.0,
                     y as f32 * 12.0 + 10.0,
                     FONT_SIZE,
                     self.frame_buffer[x][y].color

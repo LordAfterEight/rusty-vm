@@ -1,6 +1,8 @@
-draw tex [ESC]
+draw tex Press^[ESC]^to^exit
 gmov nl
-draw tex Rusty-VM_V0.1
+draw tex Rusty-VM^V0.1
 
-comp reg A num 23732
+comp reg A lit E621
+load A lit E621
+comp reg A lit E621
 halt

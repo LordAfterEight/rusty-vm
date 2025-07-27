@@ -174,7 +174,10 @@ fn main() {
                             "tex" => {
                                 memory[gpu_ptr] = opcodes::GPU_DRAW_LETT;
                                 gpu_ptr += 1;
-                                for char in instruction[2].chars() {
+                                for mut char in instruction[2].chars() {
+                                    if char == '^' {
+                                        char = char::from_u32(0x0020).unwrap();
+                                    }
                                     memory[gpu_ptr] = char as u16;
                                     gpu_ptr += 1;
                                 }
