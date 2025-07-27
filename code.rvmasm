@@ -1,7 +1,9 @@
-load A hex U
-load X hex w
-load Y hex U
-draw tex Hello_World!
-gmov re
-draw tex Rusty-VM_V0.1
-rtor
+load A hex H
+load X hex U
+comp A X
+juie lit 0x0F00
+load X hex H
+comp A X
+juie lit 0x0F00
+noop
+halt

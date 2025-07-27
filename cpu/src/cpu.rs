@@ -18,6 +18,7 @@ pub struct CPU {
     pub y_reg: u16,
 
     pub halt_flag: bool,
+    pub eq_flag: bool,
 
     pub clock_speed: usize, // in Hz
 
@@ -28,13 +29,15 @@ impl CPU {
     pub fn init() -> Self {
         let path = format!("{}/../gpu/target/release/rusty-vm_gpu", env!("CARGO_MANIFEST_DIR"));
         #[cfg(debug_assertions)]
-        crate::debug!("Getting external GPU process from: ", path);
 
+        /*
+        crate::debug!("Getting external GPU process from: ", path);
         _ = Some(
             Command::new(path)
             .spawn()
             .unwrap(),
         );
+        */
 
         Self {
             name: String::from("OwO CPU"),
@@ -47,8 +50,9 @@ impl CPU {
             y_reg: Default::default(),
 
             halt_flag: false,
+            eq_flag: false,
 
-            clock_speed: 1, // in Hz
+            clock_speed: 4, // in Hz
 
             memory: crate::memory::Memory::init(),
         }
@@ -172,6 +176,38 @@ impl CPU {
                 );
                 self.increase_instr_ptr();
             },
+            COMP_REGS => {
+                let reg_a = self.read_word();
+                let reg_b = self.read_word();
+                let regs = vec![self.a_reg, self.x_reg, self.y_reg];
+                if regs[reg_a as usize - 1] == regs[reg_b as usize - 1] {
+                    self.eq_flag = true;
+                }
+                #[cfg(debug_assertions)]
+                crate::debug!("COMP: eq_flag = ", self.eq_flag);
+            },
+            JUMP_IFEQ => {
+                match self.eq_flag {
+                    true => {
+                        self.instr_ptr = self.read_word();
+                        #[cfg(debug_assertions)]
+                        crate::debug!(
+                            "JUMP_IFEQ: Jumping to: ",
+                            crate::hex!(self.instr_ptr)
+                        );
+                    },
+                    false => {
+                        #[cfg(debug_assertions)]
+                        crate::debug!("JUMP_IFEQ: Not jumping");
+                        self.increase_instr_ptr();
+                    }
+                }
+            },
+            HALT_LOOP => {
+                self.halt_flag = true;
+                #[cfg(debug_assertions)]
+                crate::debug!("HALT: ", self.halt_flag);
+            }
             _ => {}
         }
 

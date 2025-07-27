@@ -97,6 +97,9 @@ fn main() {
     let mut instr_ptr: usize = 0x0500;
     let mut gpu_ptr: usize = 0x0300;
 
+    let mut regs = vec![0,0,0];
+    let mut eq_flag = false;
+
     let mut code_line = 1;
 
     println!("Programming memory...\n");
@@ -110,10 +113,16 @@ fn main() {
             _ => {
                 match instruction[0] {
                     "load" => {
-                        let instr = parse_regs(&instruction, code_line);
+                        let instr = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit(&instruction, code_line, 2, 0);
                         memory[instr_ptr] = instr;
                         memory[instr_ptr + 1] = value;
+                        match instr {
+                            1 => regs[0] = value,
+                            2 => regs[1] = value,
+                            3 => regs[2] = value,
+                            _ => {}
+                        }
                         instr_ptr += 2;
                     },
                     "jump" => {
@@ -162,10 +171,34 @@ fn main() {
                             "do" => memory[gpu_ptr] = opcodes::GPU_MV_C_DOWN,
                             "le" => memory[gpu_ptr] = opcodes::GPU_MV_C_LEFT,
                             "ri" => memory[gpu_ptr] = opcodes::GPU_MV_C_RIGH,
-                            "re" => memory[gpu_ptr] = opcodes::GPU_NEW_LINE,
+                            "nl" => memory[gpu_ptr] = opcodes::GPU_NEW_LINE,
                             _ => panic(&instruction, code_line, 1),
                         }
                         gpu_ptr += 1;
+                    },
+                    "comp" => {
+                        let reg_a = parse_regs(&instruction, code_line, 1);
+                        let reg_b = parse_regs(&instruction, code_line, 2);
+                        memory[instr_ptr] = opcodes::COMP_REGS;
+                        memory[instr_ptr + 1] = reg_a;
+                        memory[instr_ptr + 2] = reg_b;
+                        if regs[reg_a as usize - 1] == regs[reg_b as usize - 1] {
+                            eq_flag = true;
+                        }
+                        instr_ptr += 3;
+                    },
+                    "juie" => {
+                        memory[instr_ptr] = opcodes::JUMP_IFEQ;
+                        let address = parse_hex_lit(&instruction, code_line, 1, 0);
+                        memory[instr_ptr + 1] = address;
+                        if eq_flag {
+                            instr_ptr = address as usize;
+                        } else {
+                            instr_ptr += 2;
+                        }
+                    },
+                    "halt" => {
+                        memory[instr_ptr] = opcodes::HALT_LOOP;
                     }
                     "" => {},
                     _ => {
@@ -183,9 +216,9 @@ fn main() {
     }
 }
 
-fn parse_regs(instruction: &Vec<&str>, code_line: usize) -> u16 {
+fn parse_regs(instruction: &Vec<&str>, code_line: usize, arg_pos: usize) -> u16 {
     let mut ret = 0;
-    match instruction[1] {
+    match instruction[arg_pos] {
         "A" => ret = opcodes::LOAD_AREG,
         "X" => ret = opcodes::LOAD_XREG,
         "Y" => ret = opcodes::LOAD_YREG,

@@ -4,6 +4,10 @@
 /// OpCode: No operation. SImply doesn't do anything except increasing the instruction pointer
 pub const NO_OPERAT: u16 = 0x0000;
 
+// --- OpCodes: Halt
+/// OpCode: Sets the CPU's halt_flag to true
+pub const HALT_LOOP: u16 = 0x000F;
+
 // --- OpCodes: Load into Register ---
 /// OpCode: Loads the following value into A register
 pub const LOAD_AREG: u16 = 0x0001;
@@ -27,6 +31,13 @@ pub const JMP_TO_AD: u16 = 0x0020;
 ///         it, returning to where the program came from.
 pub const RET_TO_OR: u16 = 0x0031;
 
+// --- OpCodes: Compare two registers ---
+/// OpCodes: Compares two registers and sets the eq_flag accordingly.
+pub const COMP_REGS: u16 = 0x0004;
+
+// --- OpCodes: Jump if equal ---
+/// OpCodes: Jumps to the following address if the eq_flag is set
+pub const JUMP_IFEQ: u16 = 0x0022;
 
 
 // NOTE: GPU OPCODES

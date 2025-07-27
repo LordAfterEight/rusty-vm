@@ -22,12 +22,15 @@ fn main() {
 
 
     loop {
-        #[cfg(debug_assertions)]
-        debug!(
-            "CPU instruction pointer: ",
-            format!("{:#06X}", cpu.instr_ptr)
-        );
-        if cpu.halt_flag == false { cpu.update(); }
+        if cpu.halt_flag == false {
+            println!("\n");
+            #[cfg(debug_assertions)]
+            debug!(
+                "CPU instruction pointer: ",
+                format!("{:#06X}", cpu.instr_ptr)
+            );
+            cpu.update();
+        }
     }
 }
 
