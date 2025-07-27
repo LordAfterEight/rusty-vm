@@ -1,9 +1,6 @@
-load A hex H
-load X hex U
-comp A X
-juie lit 0x0F00
-load X hex H
-comp A X
-juie lit 0x0F00
-noop
+draw tex [ESC]
+gmov nl
+draw tex Rusty-VM_V0.1
+
+comp reg A num 23732
 halt

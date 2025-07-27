@@ -113,8 +113,17 @@ fn main() {
             _ => {
                 match instruction[0] {
                     "load" => {
-                        let instr = parse_regs(&instruction, code_line, 1);
+                        if instruction.len() < 3 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        let reg = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit(&instruction, code_line, 2, 0);
+                        let instr = match reg {
+                            0x0041 => opcodes::LOAD_AREG,
+                            0x0058 => opcodes::LOAD_XREG,
+                            0x0059 => opcodes::LOAD_YREG,
+                            _ => 0
+                        };
                         memory[instr_ptr] = instr;
                         memory[instr_ptr + 1] = value;
                         match instr {
@@ -126,11 +135,17 @@ fn main() {
                         instr_ptr += 2;
                     },
                     "jump" => {
+                        if instruction.len() < 2 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
                         memory[instr_ptr] = opcodes::JMP_TO_AD;
                         memory[instr_ptr + 1] = parse_hex_lit(&instruction, code_line, 2, 0);
                         instr_ptr += 2;
                     },
                     "jusr" => {
+                        if instruction.len() < 2 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
                         memory[instr_ptr] = opcodes::JMP_TO_SR;
                         memory[instr_ptr + 1] = parse_hex_lit(&instruction, code_line, 1, 0);
                         let new_addr = memory[instr_ptr + 1];
@@ -144,11 +159,17 @@ fn main() {
                         instr_ptr += 1;
                     },
                     "setv" => {
+                        if instruction.len() < 3 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
                         let address = parse_hex_lit(&instruction, code_line, 1, 0);
                         let value = parse_hex_lit(&instruction, code_line, 3, 0);
                         memory[address as usize] = value;
                     },
                     "draw" => {
+                        if instruction.len() < 3 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
                         match instruction[1] {
                             "tex" => {
                                 memory[gpu_ptr] = opcodes::GPU_DRAW_LETT;
@@ -161,33 +182,48 @@ fn main() {
                                 gpu_ptr += 1;
                                 memory[gpu_ptr] = opcodes::GPU_UPDATE;
                             },
-                            _ => panic(&instruction, code_line, 1),
+                            _ => panic("", &instruction, code_line, 1),
                         }
                         gpu_ptr += 1;
                     },
                     "gmov" => {
+                        if instruction.len() < 2 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
                         match instruction[1] {
                             "up" => memory[gpu_ptr] = opcodes::GPU_MV_C_UP,
                             "do" => memory[gpu_ptr] = opcodes::GPU_MV_C_DOWN,
                             "le" => memory[gpu_ptr] = opcodes::GPU_MV_C_LEFT,
                             "ri" => memory[gpu_ptr] = opcodes::GPU_MV_C_RIGH,
                             "nl" => memory[gpu_ptr] = opcodes::GPU_NEW_LINE,
-                            _ => panic(&instruction, code_line, 1),
+                            _ => panic("", &instruction, code_line, 1),
                         }
                         gpu_ptr += 1;
                     },
                     "comp" => {
-                        let reg_a = parse_regs(&instruction, code_line, 1);
-                        let reg_b = parse_regs(&instruction, code_line, 2);
+                        if instruction.len() < 5 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        let val_1 = match instruction[1] {
+                            "reg" => parse_regs(&instruction, code_line, 2),
+                            _ => parse_hex_lit(&instruction, code_line, 1, 0)
+                        };
+                        let val_2 = match instruction[3] {
+                            "reg" => parse_regs(&instruction, code_line, 4),
+                            _ => parse_hex_lit(&instruction, code_line, 3, 0)
+                        };
                         memory[instr_ptr] = opcodes::COMP_REGS;
-                        memory[instr_ptr + 1] = reg_a;
-                        memory[instr_ptr + 2] = reg_b;
-                        if regs[reg_a as usize - 1] == regs[reg_b as usize - 1] {
+                        memory[instr_ptr + 1] = val_1;
+                        memory[instr_ptr + 2] = val_2;
+                        if val_1 == val_2 {
                             eq_flag = true;
                         }
                         instr_ptr += 3;
                     },
                     "juie" => {
+                        if instruction.len() < 2 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
                         memory[instr_ptr] = opcodes::JUMP_IFEQ;
                         let address = parse_hex_lit(&instruction, code_line, 1, 0);
                         memory[instr_ptr + 1] = address;
@@ -197,12 +233,24 @@ fn main() {
                             instr_ptr += 2;
                         }
                     },
+                    "radd" => {
+                        if instruction.len() < 3 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        let reg = parse_regs(&instruction, code_line, 1);
+                        let value = parse_hex_lit(&instruction, code_line, 2, 0);
+                        memory[instr_ptr] = opcodes::INC_REG_V;
+                        memory[instr_ptr + 1] = reg;
+                        memory[instr_ptr + 2] = value;
+                        regs[reg as usize - 1] = value;
+                        instr_ptr += 3;
+                    },
                     "halt" => {
                         memory[instr_ptr] = opcodes::HALT_LOOP;
                     }
                     "" => {},
                     _ => {
-                        panic(&instruction, code_line, 0);
+                        panic("", &instruction, code_line, 0);
                     }
                 }
             }
@@ -217,13 +265,11 @@ fn main() {
 }
 
 fn parse_regs(instruction: &Vec<&str>, code_line: usize, arg_pos: usize) -> u16 {
-    let mut ret = 0;
+    let ret = instruction[arg_pos].chars().next().unwrap() as u16;
     match instruction[arg_pos] {
-        "A" => ret = opcodes::LOAD_AREG,
-        "X" => ret = opcodes::LOAD_XREG,
-        "Y" => ret = opcodes::LOAD_YREG,
+        "A" | "X" | "Y" => {},
         _ => {
-            panic(&instruction, code_line, 1);
+            panic("", &instruction, code_line, 1);
         }
     }
     ret
@@ -233,15 +279,28 @@ fn parse_hex_lit(instruction: &Vec<&str>, code_line: usize, arg_pos: usize, arg_
     let mut return_value = 0;
     match instruction[arg_pos - arg_mod] {
         "hex" => return_value = instruction[arg_pos - arg_mod + 1].to_string().chars().next().unwrap() as u16,
-        "lit" => return_value = u16::from_str_radix(instruction[arg_pos - arg_mod + 1].trim_start_matches("0x"), 16).unwrap(),
-        _ => panic(&instruction, code_line, arg_pos)
+        "lit" => {
+            if instruction[arg_pos - arg_mod + 1] > "F" {
+                panic("", &instruction, code_line, arg_pos + 1);
+            }
+            return_value = u16::from_str_radix(instruction[arg_pos - arg_mod + 1].trim_start_matches("0x"), 16).unwrap()
+        },
+        "num" => {
+            let value = instruction[arg_pos + arg_mod + 1].parse::<u32>().unwrap();
+            if value > 65535 {
+                panic("Value too big, must not be bigger than 65535", &instruction, code_line, arg_pos + 1);
+            }
+            return_value = value as u16;
+        }
+        _ => panic("", &instruction, code_line, arg_pos)
     }
     return return_value
 }
 
-fn panic(instruction: &Vec<&str>, line: usize, instr: usize) {
+fn panic(message: &str, instruction: &Vec<&str>, line: usize, instr: usize) {
     print!(
-        "{}",
+        "{}\n{}",
+        message.red(),
         format!("Invalid Syntax: \"{}\"\n", instruction[instr]).red()
     );
     let mut offset = instr + 1;

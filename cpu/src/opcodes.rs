@@ -39,6 +39,10 @@ pub const COMP_REGS: u16 = 0x0004;
 /// OpCodes: Jumps to the following address if the eq_flag is set
 pub const JUMP_IFEQ: u16 = 0x0022;
 
+// --- OpCodes: Increment register value ---
+/// OpCodes: Increases the value in the register specified in the following address by the value
+///          specified in the second address after the opcode
+pub const INC_REG_V: u16 = 0x0042;
 
 // NOTE: GPU OPCODES
 // TODO:

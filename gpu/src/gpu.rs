@@ -10,9 +10,11 @@ pub struct GPU {
     pub memory: String,
     pub frame_buffer: [[Character; 40]; 63],
     pub cursor: Cursor,
+    pub cursor_visible: bool,
     pub draw_mode: bool,
     pub clock_speed: usize,
-    pub counter: usize,
+    pub pri_counter: usize,
+    pub sec_counter: usize,
 }
 
 impl GPU {
@@ -31,9 +33,11 @@ impl GPU {
             memory: buffer.to_string(),
             frame_buffer: [[Character::new(' '); 40]; 63],
             cursor: Cursor::init(),
+            cursor_visible: false,
             draw_mode: false,
-            clock_speed: 10, // In Hz
-            counter: 0,
+            clock_speed: 10_000_000, // In Hz
+            pri_counter: 0,
+            sec_counter: 0,
         }
     }
 
@@ -46,19 +50,21 @@ impl GPU {
     }
 
     pub async fn draw_framebuffer(&mut self) {
-        macroquad::text::draw_text(
-            &format!("{}", "_") as &str,
-            self.cursor.position.0 as f32 * 8.0,
-            self.cursor.position.1 as f32 * 11.0 + 10.0,
-            FONT_SIZE,
-            macroquad::color::WHITE
-        );
+        if self.cursor_visible {
+            macroquad::text::draw_text(
+                &format!("{}", "_") as &str,
+                self.cursor.position.0 as f32 * 8.0,
+                self.cursor.position.1 as f32 * 12.0 + 10.0,
+                FONT_SIZE,
+                macroquad::color::Color::new(0.4,0.4,0.4,1.0)
+            );
+        }
         for y in 0..40 {
             for x in 0..63 {
                 macroquad::text::draw_text(
                     &format!("{}", self.frame_buffer[x][y].literal) as &str,
                     x as f32 * 8.0,
-                    y as f32 * 11.0 + 10.0,
+                    y as f32 * 12.0 + 10.0,
                     FONT_SIZE,
                     self.frame_buffer[x][y].color
                 );
@@ -69,14 +75,19 @@ impl GPU {
 
     pub async fn update(&mut self) {
 
-        self.counter += 1;
+        self.pri_counter += 1;
 
-        if self.counter == 99 {
+        if self.pri_counter == 99 {
             if macroquad::input::is_key_pressed(macroquad::input::KeyCode::Escape) {
                 std::process::exit(0);
             }
             self.draw_framebuffer().await;
-            self.counter = 0;
+            self.sec_counter += 1;
+            if self.sec_counter == 10 {
+                self.cursor_visible = !self.cursor_visible;
+                self.sec_counter = 0;
+            }
+            self.pri_counter = 0;
         }
 
         let img = OpenOptions::new()
