@@ -13,7 +13,7 @@ fn window_config() -> macroquad::window::Conf {
 }
 
 // --- Use Font Size of 20 to have 40 rows and 63 collumns
-pub const FONT_SIZE: f32 = 20.0;
+pub const FONT_SIZE: f32 = 2.0;
 
 // NOTE: MEMORY LAYOUT
 // 0x0000 - 0x01FF | STACK (512 16-bit / 1024B)

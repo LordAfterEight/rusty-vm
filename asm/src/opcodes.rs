@@ -1,7 +1,7 @@
 // NOTE: CPU OPCODES
 
 // --- OpCodes: NoOp
-/// OpCode: No operation. SImply doesn't do anything except increasing the instruction pointer
+/// OpCode: No operation. Simply doesn't do anything except increasing the instruction pointer
 pub const NO_OPERAT: u16 = 0x0000;
 
 // --- OpCodes: Load into Register ---
@@ -53,3 +53,24 @@ pub const GPU_UPDATE: u16 = 0xA002;
 // --- OpCodes: Reset Frame Buffer ---
 /// GPU OpCode: This clears the GPU's frame buffer
 pub const GPU_RES_F_BUF: u16 = 0xA0A3;
+
+// --- OpCodes: Move the cursor down ---
+/// GPU OpCode: This moves the GPU's cursor down one line
+pub const GPU_MV_C_UP: u16 = 0xA0B0;
+
+// --- OpCodes: Move the cursor down ---
+/// GPU OpCode: This moves the GPU's cursor down one line
+pub const GPU_MV_C_DOWN: u16 = 0xA0B1;
+
+// --- OpCodes: Move the cursor down ---
+/// GPU OpCode: This moves the GPU's cursor down one line
+pub const GPU_MV_C_LEFT: u16 = 0xA0B2;
+
+// --- OpCodes: Move the cursor down ---
+/// GPU OpCode: This moves the GPU's cursor down one line
+pub const GPU_MV_C_RIGH: u16 = 0xA0B3;
+
+// --- OpCodes: Move the cursor down ---
+/// GPU OpCode: This moves the GPU's cursor down one line
+pub const GPU_NEW_LINE: u16 = 0xA0B4;
+

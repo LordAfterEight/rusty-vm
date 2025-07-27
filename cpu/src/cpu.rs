@@ -26,7 +26,7 @@ pub struct CPU {
 
 impl CPU {
     pub fn init() -> Self {
-        let path = format!("{}/../gpu/target/debug/rusty-vm_gpu", env!("CARGO_MANIFEST_DIR"));
+        let path = format!("{}/../gpu/target/release/rusty-vm_gpu", env!("CARGO_MANIFEST_DIR"));
         #[cfg(debug_assertions)]
         crate::debug!("Getting external GPU process from: ", path);
 
@@ -82,10 +82,10 @@ impl CPU {
     /// Reads the value at the address the instruction pointer is pointing to and returns it
     pub fn read_word(&mut self) -> u16 {
         let instruction = 0;
-        if self.memory.memory.lines().nth(self.instr_ptr as usize).is_some() {
+        if self.memory.rom.lines().nth(self.instr_ptr as usize).is_some() {
             let instruction_string = self
-                .memory.
-                memory
+                .memory
+                .rom
                 .lines()
                 .nth(self.instr_ptr as usize)
                 .unwrap()
@@ -98,6 +98,28 @@ impl CPU {
             return instruction;
         }
         instruction
+    }
+ 
+    /// Reads the value at the address the instruction pointer is pointing to and returns it
+    pub fn read_at(&mut self, address: u16) -> u16 {
+        let instruction = 0;
+        if self.memory.rom.lines().nth(address as usize).is_some() {
+            let instruction_string = self
+                .memory
+                .rom
+                .lines()
+                .nth(self.instr_ptr as usize)
+                .unwrap()
+                .to_string();
+
+            let trimmed = instruction_string.trim_start_matches("");
+
+            let instruction = u16::from_str_radix(trimmed, 2).unwrap();
+            return instruction;
+        }
+        #[cfg(debug_assertions)]
+        crate::debug!("Unable to read value at address: ", format!("{}", address));
+        return instruction;
     }
 
     pub fn update(&mut self) {
@@ -131,30 +153,24 @@ impl CPU {
 
             // --- Subroutine Things ---
             JMP_TO_SR => {
+                self.memory.ram[self.stack_ptr as usize] = self.instr_ptr;
+                self.instr_ptr = self.read_word();
                 #[cfg(debug_assertions)]
                 crate::debug!(
                     "Jumping to Subroutine at: ",
-                    crate::hex!(instruction)
+                    crate::hex!(self.instr_ptr)
                 );
-                //self.memory.memory[self.stack_ptr as usize] = self.instr_ptr;
                 self.increase_stack_ptr();
-                self.instr_ptr = self.read_word()
             },
             RET_TO_OR => {
                 self.decrease_stack_ptr();
+                self.instr_ptr = self.memory.ram[self.stack_ptr as usize];
                 #[cfg(debug_assertions)]
                 crate::debug!(
                     "Returning to:",
-                    crate::hex!(instruction)
+                    crate::hex!(self.instr_ptr)
                 );
-                //self.instr_ptr = self.memory.memory[self.stack_ptr as usize];
                 self.increase_instr_ptr();
-            },
-
-            // --- GPU Things ---
-            GPU_UPDATE => {
-                #[cfg(debug_assertions)]
-                crate::debug!("Updating GPU");
             },
             _ => {}
         }

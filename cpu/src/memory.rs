@@ -5,7 +5,8 @@ use std::io::{Read, Write};
 
 #[derive(Debug)]
 pub struct Memory {
-    pub memory: String,
+    pub rom: String,
+    pub ram: [u16;1024]
 }
 
 impl Memory {
@@ -13,7 +14,7 @@ impl Memory {
     pub fn init() -> Self {
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../memory", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
             .unwrap();
 
         let mut file = img;
@@ -21,19 +22,20 @@ impl Memory {
         _ = file.read_to_string(&mut buffer);
 
         Self {
-            memory: buffer.to_string(),
+            rom: buffer.to_string(),
+            ram: [0x000;1024]
         }
     }
 
     pub fn update(&mut self) {
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../memory", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
             .unwrap();
 
         let mut file = img;
         let mut buffer = &mut String::new();
         _ = file.read_to_string(&mut buffer);
-        self.memory = buffer.to_string();
+        self.rom = buffer.to_string();
     }
 }

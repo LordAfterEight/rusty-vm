@@ -17,7 +17,7 @@ fn main() {
     let mut img_file = OpenOptions::new()
         .write(true)
         .truncate(true)
-        .open(format!("{}/../memory", env!("CARGO_MANIFEST_DIR")))
+        .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
         .unwrap();
 
     let mut code_string = String::new();
@@ -68,6 +68,7 @@ fn main() {
 
     // NOTE: PROGRAM
     // ------- Hardcoded Boot Message ------- //
+    /*
     memory[0x0300] = opcodes::GPU_DRAW_LETT; // Draw OpCode
 
     memory[0x0301] = memory[0x0211]; // R
@@ -87,13 +88,14 @@ fn main() {
     memory[0x030E] = 0x0060; // Escape character ("`")
 
     memory[0x030F] = opcodes::GPU_UPDATE;
+    */
     // ---------------------------------------- //
 
     // NOTE: PROGRAM
     // --- Modify Memory at Runtime ---
 
     let mut instr_ptr: usize = 0x0500;
-    let stack_ptr: usize = 0x0000; // NOTE: 0x000 - 0x01FF
+    let mut gpu_ptr: usize = 0x0300;
 
     let mut code_line = 1;
 
@@ -109,11 +111,62 @@ fn main() {
                 match instruction[0] {
                     "load" => {
                         let instr = parse_regs(&instruction, code_line);
-                        let value = parse_hex_lit(&instruction, 2, code_line);
+                        let value = parse_hex_lit(&instruction, code_line, 2, 0);
                         memory[instr_ptr] = instr;
                         memory[instr_ptr + 1] = value;
                         instr_ptr += 2;
                     },
+                    "jump" => {
+                        memory[instr_ptr] = opcodes::JMP_TO_AD;
+                        memory[instr_ptr + 1] = parse_hex_lit(&instruction, code_line, 2, 0);
+                        instr_ptr += 2;
+                    },
+                    "jusr" => {
+                        memory[instr_ptr] = opcodes::JMP_TO_SR;
+                        memory[instr_ptr + 1] = parse_hex_lit(&instruction, code_line, 1, 0);
+                        let new_addr = memory[instr_ptr + 1];
+                        instr_ptr = new_addr as usize;
+                    },
+                    "rtor" => {
+                        memory[instr_ptr] = opcodes::RET_TO_OR;
+                    },
+                    "noop" => {
+                        memory[instr_ptr] = opcodes::NO_OPERAT;
+                        instr_ptr += 1;
+                    },
+                    "setv" => {
+                        let address = parse_hex_lit(&instruction, code_line, 1, 0);
+                        let value = parse_hex_lit(&instruction, code_line, 3, 0);
+                        memory[address as usize] = value;
+                    },
+                    "draw" => {
+                        match instruction[1] {
+                            "tex" => {
+                                memory[gpu_ptr] = opcodes::GPU_DRAW_LETT;
+                                gpu_ptr += 1;
+                                for char in instruction[2].chars() {
+                                    memory[gpu_ptr] = char as u16;
+                                    gpu_ptr += 1;
+                                }
+                                memory[gpu_ptr] = 0x0060;
+                                gpu_ptr += 1;
+                                memory[gpu_ptr] = opcodes::GPU_UPDATE;
+                            },
+                            _ => panic(&instruction, code_line, 1),
+                        }
+                        gpu_ptr += 1;
+                    },
+                    "gmov" => {
+                        match instruction[1] {
+                            "up" => memory[gpu_ptr] = opcodes::GPU_MV_C_UP,
+                            "do" => memory[gpu_ptr] = opcodes::GPU_MV_C_DOWN,
+                            "le" => memory[gpu_ptr] = opcodes::GPU_MV_C_LEFT,
+                            "ri" => memory[gpu_ptr] = opcodes::GPU_MV_C_RIGH,
+                            "re" => memory[gpu_ptr] = opcodes::GPU_NEW_LINE,
+                            _ => panic(&instruction, code_line, 1),
+                        }
+                        gpu_ptr += 1;
+                    }
                     "" => {},
                     _ => {
                         panic(&instruction, code_line, 0);
@@ -143,12 +196,12 @@ fn parse_regs(instruction: &Vec<&str>, code_line: usize) -> u16 {
     ret
 }
 
-fn parse_hex_lit(instruction: &Vec<&str>, arg_1: usize, code_line: usize) -> u16 {
+fn parse_hex_lit(instruction: &Vec<&str>, code_line: usize, arg_pos: usize, arg_mod: usize) -> u16 {
     let mut return_value = 0;
-    match instruction[arg_1] {
-        "hex" => return_value = instruction[arg_1 + 1].to_string().chars().next().unwrap() as u16,
-        "lit" => return_value = u16::from_str_radix(instruction[arg_1 + 1].trim_start_matches("0x"), 16).unwrap(),
-        _ => panic(&instruction, code_line, 2)
+    match instruction[arg_pos - arg_mod] {
+        "hex" => return_value = instruction[arg_pos - arg_mod + 1].to_string().chars().next().unwrap() as u16,
+        "lit" => return_value = u16::from_str_radix(instruction[arg_pos - arg_mod + 1].trim_start_matches("0x"), 16).unwrap(),
+        _ => panic(&instruction, code_line, arg_pos)
     }
     return return_value
 }

@@ -3,10 +3,10 @@ mod memory;
 mod opcodes;
 
 // --- Use Font Size of 20 to have 40 rows and 63 collumns
-pub const FONT_SIZE: f32 = 20.0;
+pub const FONT_SIZE: f32 = 12.0;
 
 // NOTE: MEMORY LAYOUT
-// 0x0000 - 0x01FF | STACK (512 16-bit / 1024B)
+// 0x0000 - 0x01FF | UNASSIGNED
 // 0x0200 - 0x0219 | A-Z
 // 0x021A - 0x021F | ! " # $ [ ]
 // 0x0220 - 0x0239 | a-z
@@ -35,15 +35,19 @@ fn main() {
 #[macro_export]
 macro_rules! debug {
     ($val0:expr) => {
-        use colored::Colorize;
-        let a = format!("{:?}", $val0).cyan();
-        println!("{}: {}", format!("[CPU DEBUG]").green(), a);
+        {
+            use colored::Colorize;
+            let a = format!("{:?}", $val0).cyan();
+            println!("{}: {}", format!("[CPU DEBUG]").green(), a);
+        }
     };
     ($val0:expr, $val1:expr) => {
-        use colored::Colorize;
-        let a = format!("{:?}", $val0).cyan();
-        let b = format!("{:?}", $val1).yellow();
-        println!("{}: {} | {}", format!("[CPU DEBUG]").green(), a, b);
+        {
+            use colored::Colorize;
+            let a = format!("{:?}", $val0).cyan();
+            let b = format!("{:?}", $val1).yellow();
+            println!("{}: {} | {}", format!("[CPU DEBUG]").green(), a, b);
+        }
     }
 }
 

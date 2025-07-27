@@ -1,7 +1,8 @@
-use crate::FONT_SIZE;
 use crate::opcodes::{self, *};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, Read, Seek, SeekFrom, Write};
+
+const FONT_SIZE: f32 = 16.0;
 
 #[derive(Debug)]
 pub struct GPU {
@@ -18,7 +19,7 @@ impl GPU {
     pub fn init() -> Self {
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../memory", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         let mut file = img;
@@ -47,8 +48,8 @@ impl GPU {
     pub async fn draw_framebuffer(&mut self) {
         macroquad::text::draw_text(
             &format!("{}", "_") as &str,
-            self.cursor.position.0 as f32 * 11.0,
-            self.cursor.position.1 as f32 * 13.0 + 12.0,
+            self.cursor.position.0 as f32 * 8.0,
+            self.cursor.position.1 as f32 * 11.0 + 10.0,
             FONT_SIZE,
             macroquad::color::WHITE
         );
@@ -56,8 +57,8 @@ impl GPU {
             for x in 0..63 {
                 macroquad::text::draw_text(
                     &format!("{}", self.frame_buffer[x][y].literal) as &str,
-                    x as f32 * 11.0,
-                    y as f32 * 13.0 + 12.0,
+                    x as f32 * 8.0,
+                    y as f32 * 11.0 + 10.0,
                     FONT_SIZE,
                     self.frame_buffer[x][y].color
                 );
@@ -80,7 +81,7 @@ impl GPU {
 
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../memory", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         let mut file = img;
@@ -174,6 +175,19 @@ impl GPU {
                                 self.frame_buffer[x][y].color = macroquad::color::BLACK;
                             }
                         }
+                        self.increase_buf_ptr();
+                    },
+                    opcodes::GPU_MV_C_DOWN => {
+                        #[cfg(debug_assertions)]
+                        crate::debug!("Moving cursor down");
+                        self.cursor.position.1 += 1;
+                        self.increase_buf_ptr();
+                    },
+                    opcodes::GPU_NEW_LINE => {
+                        #[cfg(debug_assertions)]
+                        crate::debug!("Inserting new line");
+                        self.cursor.position.1 += 1;
+                        self.cursor.position.0 = 0;
                         self.increase_buf_ptr();
                     },
                     _ => {}
