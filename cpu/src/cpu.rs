@@ -14,6 +14,8 @@ pub struct CPU {
     pub x_reg: u16,
     pub y_reg: u16,
 
+    pub g_reg: u16,
+
     pub halt_flag: bool,
     pub eq_flag: bool,
 
@@ -49,10 +51,12 @@ impl CPU {
             x_reg: Default::default(),
             y_reg: Default::default(),
 
+            g_reg: Default::default(),
+
             halt_flag: false,
             eq_flag: false,
 
-            clock_speed: 10_000, // in Hz
+            clock_speed: 5, // in Hz
 
             memory: crate::memory::Memory::init(),
         }
@@ -122,6 +126,11 @@ impl CPU {
                 #[cfg(debug_assertions)]
                 crate::debug!("Loaded value into Y Register: ", crate::hex!(self.y_reg));
             }
+            LOAD_GREG => {
+                self.g_reg = self.read_word();
+                #[cfg(debug_assertions)]
+                crate::debug!("Loaded value into G Register: ", crate::hex!(self.g_reg));
+            }
 
             // --- Store a register's value to the following address. This copies the value and doesn't move it ---
             STOR_AREG => {
@@ -143,6 +152,13 @@ impl CPU {
                 self.memory.rom[addr as usize] = self.y_reg;
                 #[cfg(debug_assertions)]
                 crate::debug!("Storing Y Register to : ", crate::hex!(addr));
+                self.memory.update(addr);
+            }
+            STOR_GREG => {
+                let addr = self.read_word();
+                self.memory.rom[addr as usize] = self.g_reg;
+                #[cfg(debug_assertions)]
+                crate::debug!("Storing G Register to : ", crate::hex!(addr));
                 self.memory.update(addr);
             }
 

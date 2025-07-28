@@ -214,9 +214,9 @@ fn main() {
                         }
                         match instruction[1] {
                             "str" => {
-                                memory[instr_ptr] = opcodes::LOAD_AREG;
+                                memory[instr_ptr] = opcodes::LOAD_GREG;
                                 memory[instr_ptr + 1] = opcodes::GPU_DRAW_LETT;
-                                memory[instr_ptr + 2] = opcodes::STOR_AREG;
+                                memory[instr_ptr + 2] = opcodes::STOR_GREG;
                                 memory[instr_ptr + 3] = gpu_ptr as u16;
                                 gpu_ptr += 1;
                                 instr_ptr += 4;
@@ -224,29 +224,66 @@ fn main() {
                                     if char == '^' {
                                         char = char::from_u32(0x0020).unwrap();
                                     }
-                                    memory[instr_ptr] = opcodes::LOAD_AREG;
+                                    memory[instr_ptr] = opcodes::LOAD_GREG;
                                     memory[instr_ptr + 1] = char as u16;
-                                    memory[instr_ptr + 2] = opcodes::STOR_AREG;
+                                    memory[instr_ptr + 2] = opcodes::STOR_GREG;
                                     memory[instr_ptr + 3] = gpu_ptr as u16;
                                     gpu_ptr += 1;
                                     instr_ptr += 4;
                                 }
-                                memory[instr_ptr] = opcodes::LOAD_AREG;
+                                memory[instr_ptr] = opcodes::LOAD_GREG;
                                 memory[instr_ptr + 1] = 0x0060;
-                                memory[instr_ptr + 2] = opcodes::STOR_AREG;
+                                memory[instr_ptr + 2] = opcodes::STOR_GREG;
                                 memory[instr_ptr + 3] = gpu_ptr as u16;
                                 gpu_ptr += 1;
                                 instr_ptr += 4;
 
-                                memory[instr_ptr] = opcodes::LOAD_AREG;
+                                memory[instr_ptr] = opcodes::LOAD_GREG;
                                 memory[instr_ptr + 1] = opcodes::GPU_UPDATE;
-                                memory[instr_ptr + 2] = opcodes::STOR_AREG;
+                                memory[instr_ptr + 2] = opcodes::STOR_GREG;
+                                memory[instr_ptr + 3] = gpu_ptr as u16;
+                                gpu_ptr += 1;
+                                instr_ptr += 4;
+                            }
+                            "reg" => {
+                                let mut reg = parse_regs(&instruction, code_line, 2);
+                                let mut instr = 0;
+                                match reg {
+                                    0x0041 => { instr = opcodes::STOR_AREG; reg = 0; },
+                                    0x0058 => { instr = opcodes::STOR_XREG; reg = 1; },
+                                    0x0059 => { instr = opcodes::STOR_YREG; reg = 2; },
+                                    _ => {}
+                                }
+                                memory[instr_ptr] = opcodes::LOAD_GREG;
+                                memory[instr_ptr + 1] = opcodes::GPU_DRAW_LETT;
+                                memory[instr_ptr + 2] = opcodes::STOR_GREG;
+                                memory[instr_ptr + 3] = gpu_ptr as u16;
+                                gpu_ptr += 1;
+                                instr_ptr += 4;
+
+                                memory[instr_ptr] = instr;
+                                memory[instr_ptr + 1] = gpu_ptr as u16;
+                                gpu_ptr += 1;
+                                instr_ptr += 2;
+
+                                memory[instr_ptr] = opcodes::LOAD_GREG;
+                                memory[instr_ptr + 1] = 0x0060;
+                                memory[instr_ptr + 2] = opcodes::STOR_GREG;
+                                memory[instr_ptr + 3] = gpu_ptr as u16;
+                                gpu_ptr += 1;
+                                instr_ptr += 4;
+
+                                memory[instr_ptr] = opcodes::LOAD_GREG;
+                                memory[instr_ptr + 1] = opcodes::GPU_UPDATE;
+                                memory[instr_ptr + 2] = opcodes::STOR_GREG;
                                 memory[instr_ptr + 3] = gpu_ptr as u16;
                                 gpu_ptr += 1;
                                 instr_ptr += 4;
                             }
                             _ => panic("", &instruction, code_line, 1),
                         }
+                    }
+                    "rptr" => { // TODO: Reset pointer of either CPU or GPU
                     }
                     "cmov" => {
                         if instruction.len() < 2 {

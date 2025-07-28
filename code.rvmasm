@@ -1,5 +1,11 @@
-load A num 0 // Program Start
+load A hex 0 // Program Start
 
-draw str Rusty^VM^V0.1
+draw reg A
+cmov nl
+
+load A hex 8
+
+draw reg A
+cmov nl
 
 halt
