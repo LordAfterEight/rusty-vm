@@ -56,6 +56,21 @@ pub const JUMP_INEQ: u16 = 0x0023;
 ///          specified in the second address after the opcode
 pub const INC_REG_V: u16 = 0x0042;
 
+// --- OpCodes: Decrement register value ---
+/// OpCodes: Decreases the value in the register specified in the following address by the value
+///          specified in the second address after the opcode
+pub const DEC_REG_V: u16 = 0x0043;
+
+// --- OpCodes: Multiply register value ---
+/// OpCodes: Multiplies the value in the register specified in the following address by the value
+///          specified in the second address after the opcode
+pub const MUL_REG_V: u16 = 0x0044;
+
+// --- OpCodes: Divide register value ---
+/// OpCodes: Divides the value in the register specified in the following address by the value
+///          specified in the second address after the opcode
+pub const DIV_REG_V: u16 = 0x0045;
+
 // NOTE: GPU OPCODES
 // TODO:
 

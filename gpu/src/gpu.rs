@@ -159,15 +159,6 @@ impl GPU {
                         self.draw_mode = false;
                         self.increase_buf_ptr();
                     }
-                    '\n' => {
-                        self.cursor.position.0 = 0;
-                        if self.cursor.position.1 < 48 {
-                            self.cursor.position.1 += 1;
-                        } else {
-                            self.cursor.position.1 = 0;
-                        }
-                        self.increase_buf_ptr();
-                    }
                     _ => match instruction {
                         0x00..=0x7F => {
                             self.frame_buffer[self.cursor.position.0][self.cursor.position.1] =

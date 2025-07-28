@@ -306,6 +306,42 @@ fn main() {
                         //regs[reg as usize - 1] += value;
                         instr_ptr += 3;
                     }
+                    "rsub" => {
+                        if instruction.len() < 3 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        let reg = parse_regs(&instruction, code_line, 1);
+                        let value = parse_hex_lit(&instruction, code_line, 2, 0);
+                        memory[instr_ptr] = opcodes::DEC_REG_V;
+                        memory[instr_ptr + 1] = reg;
+                        memory[instr_ptr + 2] = value;
+                        //regs[reg as usize - 1] += value;
+                        instr_ptr += 3;
+                    }
+                    "rmul" => {
+                        if instruction.len() < 3 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        let reg = parse_regs(&instruction, code_line, 1);
+                        let value = parse_hex_lit(&instruction, code_line, 2, 0);
+                        memory[instr_ptr] = opcodes::MUL_REG_V;
+                        memory[instr_ptr + 1] = reg;
+                        memory[instr_ptr + 2] = value;
+                        //regs[reg as usize - 1] += value;
+                        instr_ptr += 3;
+                    }
+                    "rdiv" => {
+                        if instruction.len() < 3 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        let reg = parse_regs(&instruction, code_line, 1);
+                        let value = parse_hex_lit(&instruction, code_line, 2, 0);
+                        memory[instr_ptr] = opcodes::DIV_REG_V;
+                        memory[instr_ptr + 1] = reg;
+                        memory[instr_ptr + 2] = value;
+                        //regs[reg as usize - 1] += value;
+                        instr_ptr += 3;
+                    }
                     "halt" => {
                         memory[instr_ptr] = opcodes::HALT_LOOP;
                     }

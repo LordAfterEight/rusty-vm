@@ -272,6 +272,99 @@ impl CPU {
                     format!("Value: {} | Register: {}", value, reg)
                 );
             }
+            DEC_REG_V => {
+                let register = self.read_word();
+                let value = self.read_word();
+                let mut reg = ' ';
+                println!("{:#06X} {:#06X}", register, value);
+
+                match register {
+                    0x0041 => {
+                        self.a_reg -= value;
+                        println!("{}", self.a_reg);
+                        reg = 'A'
+                    }
+                    0x0058 => {
+                        self.x_reg -= value;
+                        println!("{}", self.x_reg);
+                        reg = 'X'
+                    }
+                    0x0059 => {
+                        self.y_reg -= value;
+                        println!("{}", self.y_reg);
+                        reg = 'Y'
+                    }
+                    _ => {}
+                }
+
+                #[cfg(debug_assertions)]
+                crate::debug!(
+                    "Subtracting value from Register",
+                    format!("Value: {} | Register: {}", value, reg)
+                );
+            }
+            MUL_REG_V => {
+                let register = self.read_word();
+                let value = self.read_word();
+                let mut reg = ' ';
+                println!("{:#06X} {:#06X}", register, value);
+
+                match register {
+                    0x0041 => {
+                        self.a_reg *= value;
+                        println!("{}", self.a_reg);
+                        reg = 'A'
+                    }
+                    0x0058 => {
+                        self.x_reg *= value;
+                        println!("{}", self.x_reg);
+                        reg = 'X'
+                    }
+                    0x0059 => {
+                        self.y_reg *= value;
+                        println!("{}", self.y_reg);
+                        reg = 'Y'
+                    }
+                    _ => {}
+                }
+
+                #[cfg(debug_assertions)]
+                crate::debug!(
+                    "Subtracting value from Register",
+                    format!("Value: {} | Register: {}", value, reg)
+                );
+            }
+            DIV_REG_V => {
+                let register = self.read_word();
+                let value = self.read_word();
+                let mut reg = ' ';
+                println!("{:#06X} {:#06X}", register, value);
+
+                match register {
+                    0x0041 => {
+                        self.a_reg /= value;
+                        println!("{}", self.a_reg);
+                        reg = 'A'
+                    }
+                    0x0058 => {
+                        self.x_reg /= value;
+                        println!("{}", self.x_reg);
+                        reg = 'X'
+                    }
+                    0x0059 => {
+                        self.y_reg /= value;
+                        println!("{}", self.y_reg);
+                        reg = 'Y'
+                    }
+                    _ => {}
+                }
+
+                #[cfg(debug_assertions)]
+                crate::debug!(
+                    "Subtracting value from Register",
+                    format!("Value: {} | Register: {}", value, reg)
+                );
+            }
             HALT_LOOP => {
                 self.halt_flag = true;
                 #[cfg(debug_assertions)]
