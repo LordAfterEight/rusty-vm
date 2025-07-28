@@ -2,6 +2,8 @@ use colored::Colorize;
 use std::char;
 use std::io::{Seek, SeekFrom, Write};
 use std::{fs::OpenOptions, io::Read};
+
+use crate::opcodes::LOAD_AREG;
 mod opcodes;
 
 fn main() {
@@ -134,6 +136,21 @@ fn main() {
                         }
                         instr_ptr += 2;
                     },
+                    "stor" => {
+                        if instruction.len() < 3 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        let reg = parse_regs(&instruction, code_line, 1);
+                        let addr = parse_hex_lit(&instruction, code_line, 2, 0);
+                        let instr = match reg {
+                            0x0041 => opcodes::STOR_AREG,
+                            0x0058 => opcodes::STOR_XREG,
+                            0x0059 => opcodes::STOR_YREG,
+                            _ => 0
+                        };
+                        memory[instr_ptr] = instr;
+                        memory[instr_ptr + 1] = addr;
+                    }
                     "jump" => {
                         if instruction.len() < 3 {
                             panic("Missing Argument", &instruction, code_line, 0);
@@ -150,6 +167,32 @@ fn main() {
                         memory[instr_ptr + 1] = parse_hex_lit(&instruction, code_line, 1, 0);
                         let new_addr = memory[instr_ptr + 1];
                         instr_ptr = new_addr as usize;
+                    },
+                    "jieq" => {
+                        if instruction.len() < 2 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        memory[instr_ptr] = opcodes::JUMP_IFEQ;
+                        let address = parse_hex_lit(&instruction, code_line, 1, 0);
+                        memory[instr_ptr + 1] = address;
+                        if eq_flag {
+                            instr_ptr = address as usize;
+                        } else {
+                            instr_ptr += 2;
+                        }
+                    },
+                    "jine" => {
+                        if instruction.len() < 2 {
+                            panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        memory[instr_ptr] = opcodes::JUMP_INEQ;
+                        let address = parse_hex_lit(&instruction, code_line, 1, 0);
+                        memory[instr_ptr + 1] = address;
+                        if eq_flag {
+                            instr_ptr = address as usize;
+                        } else {
+                            instr_ptr += 2;
+                        }
                     },
                     "rtor" => {
                         memory[instr_ptr] = opcodes::RET_TO_OR;
@@ -172,22 +215,39 @@ fn main() {
                         }
                         match instruction[1] {
                             "str" => {
-                                memory[gpu_ptr] = opcodes::GPU_DRAW_LETT;
+                                memory[instr_ptr] = opcodes::LOAD_AREG;
+                                memory[instr_ptr + 1] = opcodes::GPU_DRAW_LETT;
+                                memory[instr_ptr + 2] = opcodes::STOR_AREG;
+                                memory[instr_ptr + 3] = gpu_ptr as u16;
                                 gpu_ptr += 1;
+                                instr_ptr += 4;
                                 for mut char in instruction[2].chars() {
                                     if char == '^' {
                                         char = char::from_u32(0x0020).unwrap();
                                     }
-                                    memory[gpu_ptr] = char as u16;
+                                    memory[instr_ptr] = opcodes::LOAD_AREG;
+                                    memory[instr_ptr + 1] = char as u16;
+                                    memory[instr_ptr + 2] = opcodes::STOR_AREG;
+                                    memory[instr_ptr + 3] = gpu_ptr as u16;
                                     gpu_ptr += 1;
+                                    instr_ptr += 4;
                                 }
-                                memory[gpu_ptr] = 0x0060;
+                                memory[instr_ptr] = opcodes::LOAD_AREG;
+                                memory[instr_ptr + 1] = 0x0060;
+                                memory[instr_ptr + 2] = opcodes::STOR_AREG;
+                                memory[instr_ptr + 3] = gpu_ptr as u16;
                                 gpu_ptr += 1;
-                                memory[gpu_ptr] = opcodes::GPU_UPDATE;
+                                instr_ptr += 4;
+
+                                memory[instr_ptr] = opcodes::LOAD_AREG;
+                                memory[instr_ptr + 1] = opcodes::GPU_UPDATE;
+                                memory[instr_ptr + 2] = opcodes::STOR_AREG;
+                                memory[instr_ptr + 3] = gpu_ptr as u16;
+                                gpu_ptr += 1;
+                                instr_ptr += 4;
                             },
                             _ => panic("", &instruction, code_line, 1),
                         }
-                        gpu_ptr += 1;
                     },
                     "gmov" => {
                         if instruction.len() < 2 {
@@ -201,7 +261,8 @@ fn main() {
                             "nl" => memory[gpu_ptr] = opcodes::GPU_NEW_LINE,
                             _ => panic("", &instruction, code_line, 1),
                         }
-                        gpu_ptr += 1;
+                        memory[gpu_ptr + 1] = opcodes::GPU_UPDATE;
+                        gpu_ptr += 2;
                     },
                     "comp" => {
                         if instruction.len() < 5 {
@@ -222,19 +283,6 @@ fn main() {
                             eq_flag = true;
                         }
                         instr_ptr += 3;
-                    },
-                    "juie" => {
-                        if instruction.len() < 2 {
-                            panic("Missing Argument", &instruction, code_line, 0);
-                        }
-                        memory[instr_ptr] = opcodes::JUMP_IFEQ;
-                        let address = parse_hex_lit(&instruction, code_line, 1, 0);
-                        memory[instr_ptr + 1] = address;
-                        if eq_flag {
-                            instr_ptr = address as usize;
-                        } else {
-                            instr_ptr += 2;
-                        }
                     },
                     "radd" => {
                         if instruction.len() < 3 {
@@ -262,8 +310,8 @@ fn main() {
     }
 
     // NOTE: WRITE MEMORY TO FILE
-    for i in 0..memory.len() {
-        _ = img_file.write_all(format!("{:0b}\n", memory[i]).as_bytes());
+    for line in memory.iter() {
+        _ = img_file.write_all(format!("{:016b}\n", line).as_bytes());
     }
 }
 

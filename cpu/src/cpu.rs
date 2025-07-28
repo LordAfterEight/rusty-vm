@@ -1,9 +1,6 @@
 use crate::opcodes::*;
-use std::process::{Child, Command};
-use std::{
-    default::Default,
-    process::{ChildStdin, ChildStdout},
-};
+use std::process::{id, Command};
+use std::default::Default;
 
 #[derive(Debug)]
 pub struct CPU {
@@ -36,7 +33,10 @@ impl CPU {
         #[cfg(not(target_os = "android"))] {
             #[cfg(debug_assertions)]
             crate::debug!("Getting external GPU process from: ", path);
-            _ = Some(Command::new(path).spawn().unwrap());
+            #[cfg(target_os = "linux")]
+            Some(Command::new(path).arg(id().to_string()).spawn().unwrap());
+            #[cfg(target_os = "windows")]
+            Some(Command::new(path).spawn().unwrap());
         }
 
         Self {
@@ -85,51 +85,20 @@ impl CPU {
 
     /// Reads the value at the address the instruction pointer is pointing to and returns it
     pub fn read_word(&mut self) -> u16 {
-        let instruction = 0;
-        if self
+        let instruction = self
             .memory
-            .rom
-            .lines()
-            .nth(self.instr_ptr as usize)
-            .is_some()
-        {
-            let instruction_string = self
-                .memory
-                .rom
-                .lines()
-                .nth(self.instr_ptr as usize)
-                .unwrap()
-                .to_string();
+            .rom[self.instr_ptr as usize];
 
-            let trimmed = instruction_string.trim_start_matches("");
-
-            let instruction = u16::from_str_radix(trimmed, 2).unwrap();
-            self.increase_instr_ptr();
-            return instruction;
-        }
+        self.increase_instr_ptr();
         instruction
     }
 
     /// Reads the value at the address the instruction pointer is pointing to and returns it
     pub fn read_at(&mut self, address: u16) -> u16 {
-        let instruction = 0;
-        if self.memory.rom.lines().nth(address as usize).is_some() {
-            let instruction_string = self
-                .memory
-                .rom
-                .lines()
-                .nth(self.instr_ptr as usize)
-                .unwrap()
-                .to_string();
-
-            let trimmed = instruction_string.trim_start_matches("");
-
-            let instruction = u16::from_str_radix(trimmed, 2).unwrap();
-            return instruction;
-        }
-        #[cfg(debug_assertions)]
-        crate::debug!("Unable to read value at address: ", format!("{}", address));
-        return instruction;
+        let instruction = self
+            .memory
+            .rom[address as usize];
+        instruction
     }
 
     pub fn update(&mut self) {
@@ -152,6 +121,29 @@ impl CPU {
                 self.y_reg = self.read_word();
                 #[cfg(debug_assertions)]
                 crate::debug!("Loaded value into Y Register: ", crate::hex!(self.y_reg));
+            }
+
+            // --- Store a register's value to the following address. This copies the value and doesn't move it ---
+            STOR_AREG => {
+                let addr = self.read_word();
+                self.memory.rom[addr as usize] = self.a_reg;
+                #[cfg(debug_assertions)]
+                crate::debug!("Storing A Register to : ", crate::hex!(addr));
+                self.memory.update(addr);
+            }
+            STOR_XREG => {
+                let addr = self.read_word();
+                self.memory.rom[addr as usize] = self.x_reg;
+                #[cfg(debug_assertions)]
+                crate::debug!("Storing X Register to : ", crate::hex!(addr));
+                self.memory.update(addr);
+            }
+            STOR_YREG => {
+                let addr = self.read_word();
+                self.memory.rom[addr as usize] = self.y_reg;
+                #[cfg(debug_assertions)]
+                crate::debug!("Storing Y Register to : ", crate::hex!(addr));
+                self.memory.update(addr);
             }
 
             // --- Subroutine Things ---
@@ -222,7 +214,7 @@ impl CPU {
                     format!("COMP: comparing {} with {}", text_1, text_2),
                     self.eq_flag
                 );
-            }
+            },
             JUMP_IFEQ => match self.eq_flag {
                 true => {
                     self.instr_ptr = self.read_word();
@@ -235,22 +227,38 @@ impl CPU {
                     self.increase_instr_ptr();
                 }
             },
+            JUMP_INEQ => match self.eq_flag {
+                true => {
+                    #[cfg(debug_assertions)]
+                    crate::debug!("JUMP_INEQ: Not jumping");
+                    self.increase_instr_ptr();
+                }
+                false => {
+                    self.instr_ptr = self.read_word();
+                    #[cfg(debug_assertions)]
+                    crate::debug!("JUMP_INEQ: Jumping to: ", crate::hex!(self.instr_ptr));
+                }
+            },
             INC_REG_V => {
                 let register = self.read_word();
                 let value = self.read_word();
                 let mut reg = ' ';
+                println!("{:#06X} {:#06X}", register, value);
 
                 match register {
                     0x0041 => {
                         self.a_reg += value;
+                        println!("{}", self.a_reg);
                         reg = 'A'
                     }
                     0x0058 => {
                         self.x_reg += value;
+                        println!("{}", self.x_reg);
                         reg = 'X'
                     }
                     0x0059 => {
                         self.y_reg += value;
+                        println!("{}", self.y_reg);
                         reg = 'Y'
                     }
                     _ => {}
@@ -270,7 +278,6 @@ impl CPU {
             _ => {}
         }
 
-        self.memory.update();
         std::thread::sleep(std::time::Duration::from_micros(
             1_000_000 / self.clock_speed as u64,
         ));

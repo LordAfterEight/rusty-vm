@@ -17,11 +17,11 @@ pub const LOAD_XREG: u16 = 0x0002;
 pub const LOAD_YREG: u16 = 0x0003;
 
 // --- OpCodes: Load into Register ---
-/// OpCode: Loads the following value into A register
+/// OpCode: Stores the A register's value to the following address
 pub const STOR_AREG: u16 = 0x0011;
-/// OpCode: Loads the following value into X register
+/// OpCode: Stores the X register's value to the following address
 pub const STOR_XREG: u16 = 0x0012;
-/// OpCode: Loads the following value into Y register
+/// OpCode: Stores the Y register's value to the following address
 pub const STOR_YREG: u16 = 0x0013;
 
 // --- OpCodes: Jump to Subroutine ---
@@ -44,8 +44,12 @@ pub const RET_TO_OR: u16 = 0x0031;
 pub const COMP_REGS: u16 = 0x0004;
 
 // --- OpCodes: Jump if equal ---
-/// OpCodes: Jumps to the following address if the eq_flag is set
+/// OpCodes: Jumps to the following address if the eq_flag is true
 pub const JUMP_IFEQ: u16 = 0x0022;
+
+// --- OpCodes: Jump if not equal ---
+/// OpCodes: Jumps to the following address if the eq_flag is false
+pub const JUMP_INEQ: u16 = 0x0023;
 
 // --- OpCodes: Increment register value ---
 /// OpCodes: Increases the value in the register specified in the following address by the value

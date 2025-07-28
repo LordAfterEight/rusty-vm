@@ -1,11 +1,9 @@
+load A num 0 // Program Start
+radd A num 1
+comp reg A num 8
+jine lit 0x0501
+draw str Rusty^VM^V0.1
+gmov nl
 draw str Press^[ESC]^to^exit
 gmov nl
-draw str Rusty-VM^V0.1
-
-// Program starts at 0x0500
-
-radd A num 1
-comp reg A num 10
-juie lit 0xF000
-jump lit 0x0500
-setv lit 0xF000 lit 0x000F
+halt

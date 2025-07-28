@@ -18,7 +18,7 @@ pub const FONT_SIZE: f32 = 12.0;
 
 fn main() {
     let mut cpu = cpu::CPU::init();
-    _ = clearscreen::clear();
+    //_ = clearscreen::clear();
 
 
     loop {

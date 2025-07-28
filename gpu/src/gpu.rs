@@ -1,6 +1,14 @@
-use crate::opcodes::{self, *};
-use std::fs::{File, OpenOptions};
-use std::io::{BufRead, Read, Seek, SeekFrom, Write};
+use crate::opcodes;
+use std::fs::OpenOptions;
+use std::io::Read;
+
+use std::env;
+
+#[cfg(target_os = "linux")]
+use nix::{
+    sys::signal::{Signal, kill},
+    unistd::Pid,
+};
 
 const FONT_SIZE: f32 = 16.0;
 
@@ -56,7 +64,7 @@ impl GPU {
                 self.cursor.position.0 as f32 * 7.0 + 2.0,
                 self.cursor.position.1 as f32 * 12.0 + 10.0,
                 FONT_SIZE,
-                macroquad::color::WHITE //Color::new(0.4,0.4,0.4,1.0)
+                macroquad::color::WHITE, //Color::new(0.4,0.4,0.4,1.0)
             );
         }
         for y in 0..40 {
@@ -66,7 +74,7 @@ impl GPU {
                     x as f32 * 7.0 + 2.0,
                     y as f32 * 12.0 + 10.0,
                     FONT_SIZE,
-                    self.frame_buffer[x][y].color
+                    self.frame_buffer[x][y].color,
                 );
             }
         }
@@ -74,11 +82,27 @@ impl GPU {
     }
 
     pub async fn update(&mut self) {
-
         self.pri_counter += 1;
 
         if self.pri_counter == 99 {
             if macroquad::input::is_key_pressed(macroquad::input::KeyCode::Escape) {
+                let args: Vec<String> = env::args().collect();
+
+                #[cfg(target_os = "linux")]
+                let parent_pid: i32 = args[1].parse().expect("Invalid PID");
+
+                #[cfg(target_os = "windows")]
+                let parent_pid: i32 = &args[1];
+
+                #[cfg(target_os = "linux")]
+                kill(Pid::from_raw(parent_pid), Signal::SIGKILL).expect("Failed to kill parent");
+
+                #[cfg(target_os = "windows")]
+                Command::new("taskkill")
+                    .args(&["/PID", parent_pid, "/F"])
+                    .spawn()
+                    .expect("Failed to kill parent process");
+
                 std::process::exit(0);
             }
             self.draw_framebuffer().await;
@@ -102,7 +126,6 @@ impl GPU {
         self.memory = buffer.to_string();
 
         if self.memory.lines().nth(self.buf_ptr as usize).is_some() {
-
             let instruction_string = self
                 .memory
                 .lines()
@@ -135,48 +158,60 @@ impl GPU {
                         crate::debug!("Detected escape character: Exiting draw mode");
                         self.draw_mode = false;
                         self.increase_buf_ptr();
-                    },
+                    }
                     '\n' => {
                         self.cursor.position.0 = 0;
-                        self.cursor.position.1 += 1;
-                        self.increase_buf_ptr();
-                    },
-                    _ => {
-                        self.frame_buffer[self.cursor.position.0][self.cursor.position.1] =
-                            Character::new(char::from(instruction as u8));
-                        if self.cursor.position.0 < 62 {
-                            self.cursor.position.0 += 1;
-                        } else {
-                            self.cursor.position.0 = 0;
+                        if self.cursor.position.1 < 39 {
                             self.cursor.position.1 += 1;
+                        } else {
+                            self.cursor.position.1 = 0;
                         }
                         self.increase_buf_ptr();
                     }
+                    _ => match instruction {
+                        0x00..=0x7F => {
+                            self.frame_buffer[self.cursor.position.0][self.cursor.position.1] =
+                                Character::new(char::from(instruction as u8));
+                            if self.cursor.position.0 < 62 {
+                                self.cursor.position.0 += 1;
+                            } else {
+                                self.cursor.position.0 = 0;
+                                if self.cursor.position.1 < 39 {
+                                    self.cursor.position.1 += 1;
+                                } else {
+                                    self.cursor.position.1 = 0;
+                                }
+                            }
+                            self.increase_buf_ptr();
+                        }
+                        0xA0B0..=0xA0B4 => self.draw_mode = false,
+                        _ => {}
+                    },
                 }
             } else {
                 match instruction {
                     opcodes::GPU_NO_OPERAT => {
                         #[cfg(debug_assertions)]
                         crate::debug!("NoOp");
-                    },
+                    }
                     opcodes::GPU_DRAW_LETT => {
                         #[cfg(debug_assertions)]
                         crate::debug!("Entering draw mode");
                         self.increase_buf_ptr();
                         self.draw_mode = true;
-                    },
+                    }
                     opcodes::GPU_RESET_PTR => {
                         #[cfg(debug_assertions)]
                         crate::debug!("Resetting buffer pointer");
                         self.buf_ptr = 0x0300;
-                    },
+                    }
                     opcodes::GPU_UPDATE => {
                         #[cfg(debug_assertions)]
                         crate::debug!("Redrawing the screen");
                         // --- Render FrameBuffer ---
                         self.draw_framebuffer().await;
                         self.increase_buf_ptr();
-                    },
+                    }
                     opcodes::GPU_RES_F_BUF => {
                         #[cfg(debug_assertions)]
                         crate::debug!("Clearing frame buffer");
@@ -187,20 +222,20 @@ impl GPU {
                             }
                         }
                         self.increase_buf_ptr();
-                    },
+                    }
                     opcodes::GPU_MV_C_DOWN => {
                         #[cfg(debug_assertions)]
                         crate::debug!("Moving cursor down");
                         self.cursor.position.1 += 1;
                         self.increase_buf_ptr();
-                    },
+                    }
                     opcodes::GPU_NEW_LINE => {
                         #[cfg(debug_assertions)]
                         crate::debug!("Inserting new line");
                         self.cursor.position.1 += 1;
                         self.cursor.position.0 = 0;
                         self.increase_buf_ptr();
-                    },
+                    }
                     _ => {}
                 }
             }
@@ -214,14 +249,14 @@ impl GPU {
 #[derive(Debug, Clone, Copy)]
 pub struct Character {
     pub literal: char,
-    pub color:   macroquad::color::Color,
+    pub color: macroquad::color::Color,
 }
 
 impl Character {
     pub fn new(char: char) -> Self {
         Self {
             literal: char,
-            color: macroquad::color::WHITE
+            color: macroquad::color::WHITE,
         }
     }
 }
