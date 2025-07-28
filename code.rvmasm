@@ -1,11 +1,11 @@
-draw tex Press^[ESC]^to^exit
+draw str Press^[ESC]^to^exit
 gmov nl
-draw tex Rusty-VM^V0.1
+draw str Rusty-VM^V0.1
 
 // Program starts at 0x0500
 
 radd A num 1
-comp reg A num 200
+comp reg A num 10
 juie lit 0xF000
 jump lit 0x0500
 setv lit 0xF000 lit 0x000F

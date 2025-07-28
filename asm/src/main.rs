@@ -171,7 +171,7 @@ fn main() {
                             panic("Missing Argument", &instruction, code_line, 0);
                         }
                         match instruction[1] {
-                            "tex" => {
+                            "str" => {
                                 memory[gpu_ptr] = opcodes::GPU_DRAW_LETT;
                                 gpu_ptr += 1;
                                 for mut char in instruction[2].chars() {

@@ -35,7 +35,7 @@ impl GPU {
             cursor: Cursor::init(),
             cursor_visible: false,
             draw_mode: false,
-            clock_speed: 10_000_000, // In Hz
+            clock_speed: 10_000, // In Hz
             pri_counter: 0,
             sec_counter: 0,
         }
@@ -56,7 +56,7 @@ impl GPU {
                 self.cursor.position.0 as f32 * 7.0 + 2.0,
                 self.cursor.position.1 as f32 * 12.0 + 10.0,
                 FONT_SIZE,
-                macroquad::color::Color::new(0.4,0.4,0.4,1.0)
+                macroquad::color::WHITE //Color::new(0.4,0.4,0.4,1.0)
             );
         }
         for y in 0..40 {

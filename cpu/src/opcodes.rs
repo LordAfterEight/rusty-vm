@@ -16,6 +16,14 @@ pub const LOAD_XREG: u16 = 0x0002;
 /// OpCode: Loads the following value into Y register
 pub const LOAD_YREG: u16 = 0x0003;
 
+// --- OpCodes: Load into Register ---
+/// OpCode: Loads the following value into A register
+pub const STOR_AREG: u16 = 0x0011;
+/// OpCode: Loads the following value into X register
+pub const STOR_XREG: u16 = 0x0012;
+/// OpCode: Loads the following value into Y register
+pub const STOR_YREG: u16 = 0x0013;
+
 // --- OpCodes: Jump to Subroutine ---
 /// OpCode: Sets the instruction pointer to the value of the following address, jumping there.
 ///         This also pushes the previous value to the stack, allowing to return to where the
