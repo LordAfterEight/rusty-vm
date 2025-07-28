@@ -135,11 +135,11 @@ fn main() {
                         instr_ptr += 2;
                     },
                     "jump" => {
-                        if instruction.len() < 2 {
+                        if instruction.len() < 3 {
                             panic("Missing Argument", &instruction, code_line, 0);
                         }
                         memory[instr_ptr] = opcodes::JMP_TO_AD;
-                        memory[instr_ptr + 1] = parse_hex_lit(&instruction, code_line, 2, 0);
+                        memory[instr_ptr + 1] = parse_hex_lit(&instruction, code_line, 1, 0);
                         instr_ptr += 2;
                     },
                     "jusr" => {
@@ -245,7 +245,7 @@ fn main() {
                         memory[instr_ptr] = opcodes::INC_REG_V;
                         memory[instr_ptr + 1] = reg;
                         memory[instr_ptr + 2] = value;
-                        regs[reg as usize - 1] = value;
+                        //regs[reg as usize - 1] += value;
                         instr_ptr += 3;
                     },
                     "halt" => {

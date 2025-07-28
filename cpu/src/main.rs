@@ -18,12 +18,12 @@ pub const FONT_SIZE: f32 = 12.0;
 
 fn main() {
     let mut cpu = cpu::CPU::init();
-    //mem.dump();
+    _ = clearscreen::clear();
 
 
     loop {
         if cpu.halt_flag == false {
-            println!("\n");
+            println!();
             #[cfg(debug_assertions)]
             debug!(
                 "CPU instruction pointer: ",

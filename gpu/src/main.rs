@@ -5,6 +5,7 @@ use std::default::Default;
 
 fn window_config() -> macroquad::window::Conf {
     macroquad::window::Conf {
+        window_title: "Rusty-VM".to_string(),
         window_width: 640,
         window_height: 480,
         window_resizable: false,
@@ -12,8 +13,6 @@ fn window_config() -> macroquad::window::Conf {
     }
 }
 
-// --- Use Font Size of 20 to have 40 rows and 63 collumns
-pub const FONT_SIZE: f32 = 2.0;
 
 // NOTE: MEMORY LAYOUT
 // 0x0000 - 0x01FF | STACK (512 16-bit / 1024B)

@@ -135,7 +135,7 @@ impl CPU {
     pub fn update(&mut self) {
         let instruction = self.read_word();
         #[cfg(debug_assertions)]
-        crate::debug!("Read value: ", instruction);
+        crate::debug!("Read value: ", crate::hex!(instruction));
         match instruction {
             // --- Load the next value into one of the registers ---
             LOAD_AREG => {
@@ -161,6 +161,12 @@ impl CPU {
                 #[cfg(debug_assertions)]
                 crate::debug!("Jumping to Subroutine at: ", crate::hex!(self.instr_ptr));
                 self.increase_stack_ptr();
+            }
+            JMP_TO_AD => {
+                let address = self.read_word();
+                self.instr_ptr = address;
+                #[cfg(debug_assertions)]
+                crate::debug!("Jumping to: ", crate::hex!(address));
             }
             RET_TO_OR => {
                 self.decrease_stack_ptr();
@@ -235,16 +241,16 @@ impl CPU {
                 let mut reg = ' ';
 
                 match register {
-                    1 => {
-                        self.a_reg = value;
+                    0x0041 => {
+                        self.a_reg += value;
                         reg = 'A'
                     }
-                    2 => {
-                        self.x_reg = value;
+                    0x0058 => {
+                        self.x_reg += value;
                         reg = 'X'
                     }
-                    3 => {
-                        self.y_reg = value;
+                    0x0059 => {
+                        self.y_reg += value;
                         reg = 'Y'
                     }
                     _ => {}
