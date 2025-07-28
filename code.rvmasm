@@ -2,23 +2,91 @@ load A num 0 // Program Start
 
 draw str Rusty^VM^V0.1
 cmov nl
-draw str Press^[ESC]^to^exit
+draw str 1.........10........20........30........40........50........60........70........80.......90
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str 10
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str 20
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str 30
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str 40
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str .
+cmov nl
+draw str 48
+clear
+
+load A num 200
+draw str Loaded^200^into^register^A
 cmov nl
 
-load A num 0
+comp reg A num 200
+draw str Comparing...
+cmov nl
 
-radd A num 1
-comp reg A num 1000
-jine lit 0x059C
-clear
-
-draw str Shutting^down...
-
-load A num 0
-
-radd A num 1
-comp reg A num 100
-jine lit 0x05F6
-
-clear
 halt

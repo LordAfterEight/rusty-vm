@@ -16,7 +16,7 @@ const FONT_SIZE: f32 = 16.0;
 pub struct GPU {
     pub buf_ptr: u16,
     pub memory: String,
-    pub frame_buffer: [[Character; 40]; 63],
+    pub frame_buffer: [[Character; 48]; 92],
     pub cursor: Cursor,
     pub cursor_visible: bool,
     pub draw_mode: bool,
@@ -39,11 +39,11 @@ impl GPU {
         Self {
             buf_ptr: 0x0300, // 0x0300 - 0x04FF => 768 - 1279, so 512 16-bit addresses
             memory: buffer.to_string(),
-            frame_buffer: [[Character::new(' '); 40]; 63],
+            frame_buffer: [[Character::new(' '); 48]; 92],
             cursor: Cursor::init(),
             cursor_visible: false,
             draw_mode: false,
-            clock_speed: 10_000, // In Hz
+            clock_speed: 50_000, // In Hz
             pri_counter: 0,
             sec_counter: 0,
         }
@@ -68,7 +68,7 @@ impl GPU {
             );
         }
         for y in 0..40 {
-            for x in 0..63 {
+            for x in 0..91 {
                 macroquad::text::draw_text(
                     &format!("{}", self.frame_buffer[x][y].literal) as &str,
                     x as f32 * 7.0 + 2.0,
@@ -161,7 +161,7 @@ impl GPU {
                     }
                     '\n' => {
                         self.cursor.position.0 = 0;
-                        if self.cursor.position.1 < 39 {
+                        if self.cursor.position.1 < 48 {
                             self.cursor.position.1 += 1;
                         } else {
                             self.cursor.position.1 = 0;
@@ -172,11 +172,11 @@ impl GPU {
                         0x00..=0x7F => {
                             self.frame_buffer[self.cursor.position.0][self.cursor.position.1] =
                                 Character::new(char::from(instruction as u8));
-                            if self.cursor.position.0 < 62 {
+                            if self.cursor.position.0 < 91 {
                                 self.cursor.position.0 += 1;
                             } else {
                                 self.cursor.position.0 = 0;
-                                if self.cursor.position.1 < 39 {
+                                if self.cursor.position.1 < 48 {
                                     self.cursor.position.1 += 1;
                                 } else {
                                     self.cursor.position.1 = 0;
@@ -215,8 +215,8 @@ impl GPU {
                     opcodes::GPU_RES_F_BUF => {
                         #[cfg(debug_assertions)]
                         crate::debug!("Clearing frame buffer");
-                        for y in 0..40 {
-                            for x in 0..63 {
+                        for y in 0..48 {
+                            for x in 0..91 {
                                 self.frame_buffer[x][y].literal = ' ';
                                 self.frame_buffer[x][y].color = macroquad::color::BLACK;
                             }
