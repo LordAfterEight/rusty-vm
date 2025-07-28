@@ -220,6 +220,7 @@ impl CPU {
                     self.instr_ptr = self.read_word();
                     #[cfg(debug_assertions)]
                     crate::debug!("JUMP_IFEQ: Jumping to: ", crate::hex!(self.instr_ptr));
+                    self.eq_flag = false;
                 }
                 false => {
                     #[cfg(debug_assertions)]
@@ -232,6 +233,7 @@ impl CPU {
                     #[cfg(debug_assertions)]
                     crate::debug!("JUMP_INEQ: Not jumping");
                     self.increase_instr_ptr();
+                    self.eq_flag = false;
                 }
                 false => {
                     self.instr_ptr = self.read_word();

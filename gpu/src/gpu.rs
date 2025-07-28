@@ -221,6 +221,7 @@ impl GPU {
                                 self.frame_buffer[x][y].color = macroquad::color::BLACK;
                             }
                         }
+                        self.cursor.position = (0,0);
                         self.increase_buf_ptr();
                     }
                     opcodes::GPU_MV_C_DOWN => {

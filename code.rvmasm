@@ -1,9 +1,24 @@
 load A num 0 // Program Start
-radd A num 1
-comp reg A num 8
-jine lit 0x0501
+
 draw str Rusty^VM^V0.1
-gmov nl
+cmov nl
 draw str Press^[ESC]^to^exit
-gmov nl
+cmov nl
+
+load A num 0
+
+radd A num 1
+comp reg A num 1000
+jine lit 0x059C
+clear
+
+draw str Shutting^down...
+
+load A num 0
+
+radd A num 1
+comp reg A num 100
+jine lit 0x05F6
+
+clear
 halt
