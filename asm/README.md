@@ -1,7 +1,7 @@
 # RvmASM Assembler
 This is the assembler for ```.rvmasm``` files. It will parse any file of that type and convert it into a text file with binary content for [Rusty-VM](https://github.com/lordaftereight/rusty-vm) to read. to use it, first run the following command:
 ```shell
-cargo install --path .
+cargo install rvmasm
 ```
 Now you can use the ```rvmasm``` command to build a binary from any ```.rvmasm``` input file:
 ```shell
