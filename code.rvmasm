@@ -1,5 +1,5 @@
 // Program starts at 0x0500
-draw str Hello^ col red
+draw str Hello^ col cyan
 draw str World! col magenta
 cmov nl
 halt
