@@ -10,6 +10,7 @@ RvmASM is an Assembly-ish language for my 16-bit virtual machine Rusty-VM. I mad
    - [hex](#hex)
    - [num](#num)
    - [str](#str)
+   - [col](#col)
 2. [Instructions](#Instructions)
    - [load](#load)
    - [stor](#stor)
@@ -19,10 +20,14 @@ RvmASM is an Assembly-ish language for my 16-bit virtual machine Rusty-VM. I mad
    - [jine](#jine)
    - [setv](#setv)
    - [comp](#comp)
+   - [radd](#radd)
+   - [rsub](#rsub)
+   - [rmul](#rmul)
+   - [rdiv](#rdiv)
 
 ## Keywords <a name="Keywords"></a>
 These are used to determine what type the following value will be converted to.
-There are four keywords: ```lit```, ```hex```, ```num``` and ```str```:
+There are five keywords: ```lit```, ```hex```, ```num``` and ```str```:
 
 
 ### ```lit``` <a name="lit"></a>
@@ -65,7 +70,17 @@ load X num 65535    # number 65535 will be loaded into the X register. Would be 
   
 ```str``` is currently only used for ```draw```ing and will simply convert each character into a u16 that will be stored into the GPU buffer without interruption. The assembler will automatically add an escape character ("``` ` ```") to the end of the string so the GPU knows when to exit drawing mode. Whitespace is not allowed inside a ```str```, use the character ```^``` instead. Example:
 ```ruby
-draw str Hello^World!  # Will print "Hello World!" to the screen if the GPU is running
+draw str Hello^World!  # Will print "Hello World!" to the screen
+```
+</details>
+
+### ```col``` <a name="col"></a>
+<details open>
+  <Summary> Explanation </Summary>
+  
+```col``` is currently only used for ```draw```ing. It is placed behind a ```str``` to color it. You can also just not use it, then the assembler will default to making the ```str``` white. Example:
+```ruby
+draw str Hello^World! col red  # Will print a red "Hello World!" to the screen
 ```
 </details>
 
@@ -181,5 +196,49 @@ setv num 22266 lit 0x0055   # You can also use a number or hex values directly
 comp lit 0x4000 num 8    # Compares the hexadecimal value 0x4000 with the decimal value 8
 comp reg A num 8         # Compares the content of register A with the decimal value 8
 comp reg A reg X         # Compares two registers
+```
+</details>
+
+### ```radd``` <a name="radd"></a>
+<details open>
+  <Summary> Explanation </Summary>
+  
+```radd``` is used to increment a register's value by the following value. Examples:
+```ruby
+radd A num 8      # Increases the value in the A register by 8
+radd X hex 12     # Increases the value in the X register by 0x12 (18 in decimal)
+```
+</details>
+
+### ```rsub``` <a name="rsub"></a>
+<details open>
+  <Summary> Explanation </Summary>
+
+```rsub``` is used to decrement a register's value by the following value. Examples:
+```ruby
+rsub A num 8      # Decreases the value in the A register by 8
+rsub X hex 12     # Decreases the value in the X register by 0x12 (18 in decimal)
+```
+</details>
+
+### ```rmul``` <a name="rmul"></a>
+<details open>
+  <Summary> Explanation </Summary>
+
+```rmul``` is used to multiply a register's value by the following value. Examples:
+```ruby
+rmul A num 8      # Multiplies the value in the A register by 8
+rmul X hex 12     # Multiplies the value in the X register by 0x12 (18 in decimal)
+```
+</details>
+
+### ```rdiv``` <a name="rdiv"></a>
+<details open>
+  <Summary> Explanation </Summary>
+
+```rdiv``` is used to divide a register's value by the following value. Examples:
+```ruby
+rdiv A num 8      # Divides the value in the A register by 8
+rdiv X hex 12     # Divides the value in the X register by 0x12 (18 in decimal)
 ```
 </details>

@@ -26,11 +26,19 @@ pub struct CPU {
 
 impl CPU {
     pub fn init() -> Self {
+        let mut path = String::new();
 
-        let path = format!(
-            "{}/../gpu/target/release/rusty-vm_gpu",
-            env!("CARGO_MANIFEST_DIR")
-        );
+        if cfg!(debug_assertions) {
+            path = format!(
+                "{}/../gpu/target/debug/rusty-vm_gpu",
+                env!("CARGO_MANIFEST_DIR")
+            );
+        } else {
+            path = format!(
+                "{}/../gpu/target/release/rusty-vm_gpu",
+                env!("CARGO_MANIFEST_DIR")
+            );
+        }
 
         #[cfg(not(target_os = "android"))] {
             #[cfg(debug_assertions)]
@@ -56,7 +64,7 @@ impl CPU {
             halt_flag: false,
             eq_flag: false,
 
-            clock_speed: 5, // in Hz
+            clock_speed: 10, // in Hz
 
             memory: crate::memory::Memory::init(),
         }
@@ -110,6 +118,11 @@ impl CPU {
         #[cfg(debug_assertions)]
         crate::debug!("Read value: ", crate::hex!(instruction));
         match instruction {
+            NO_OPERAT => {
+                #[cfg(debug_assertions)]
+                crate::debug!("Doing nothing");
+            }
+
             // --- Load the next value into one of the registers ---
             LOAD_AREG => {
                 self.a_reg = self.read_word();
@@ -261,22 +274,18 @@ impl CPU {
                 let register = self.read_word();
                 let value = self.read_word();
                 let mut reg = ' ';
-                println!("{:#06X} {:#06X}", register, value);
 
                 match register {
                     0x0041 => {
                         self.a_reg += value;
-                        println!("{}", self.a_reg);
                         reg = 'A'
                     }
                     0x0058 => {
                         self.x_reg += value;
-                        println!("{}", self.x_reg);
                         reg = 'X'
                     }
                     0x0059 => {
                         self.y_reg += value;
-                        println!("{}", self.y_reg);
                         reg = 'Y'
                     }
                     _ => {}
@@ -285,29 +294,25 @@ impl CPU {
                 #[cfg(debug_assertions)]
                 crate::debug!(
                     "Adding value to Register",
-                    format!("Value: {} | Register: {}", value, reg)
+                    format!("Value: {} | register: {}", value, reg)
                 );
             }
             DEC_REG_V => {
                 let register = self.read_word();
                 let value = self.read_word();
                 let mut reg = ' ';
-                println!("{:#06X} {:#06X}", register, value);
 
                 match register {
                     0x0041 => {
                         self.a_reg -= value;
-                        println!("{}", self.a_reg);
                         reg = 'A'
                     }
                     0x0058 => {
                         self.x_reg -= value;
-                        println!("{}", self.x_reg);
                         reg = 'X'
                     }
                     0x0059 => {
                         self.y_reg -= value;
-                        println!("{}", self.y_reg);
                         reg = 'Y'
                     }
                     _ => {}
@@ -315,7 +320,7 @@ impl CPU {
 
                 #[cfg(debug_assertions)]
                 crate::debug!(
-                    "Subtracting value from Register",
+                    "Subtracting value from register",
                     format!("Value: {} | Register: {}", value, reg)
                 );
             }
@@ -323,22 +328,18 @@ impl CPU {
                 let register = self.read_word();
                 let value = self.read_word();
                 let mut reg = ' ';
-                println!("{:#06X} {:#06X}", register, value);
 
                 match register {
                     0x0041 => {
                         self.a_reg *= value;
-                        println!("{}", self.a_reg);
                         reg = 'A'
                     }
                     0x0058 => {
                         self.x_reg *= value;
-                        println!("{}", self.x_reg);
                         reg = 'X'
                     }
                     0x0059 => {
                         self.y_reg *= value;
-                        println!("{}", self.y_reg);
                         reg = 'Y'
                     }
                     _ => {}
@@ -346,7 +347,7 @@ impl CPU {
 
                 #[cfg(debug_assertions)]
                 crate::debug!(
-                    "Subtracting value from Register",
+                    "Multiplying register value by",
                     format!("Value: {} | Register: {}", value, reg)
                 );
             }
@@ -354,22 +355,18 @@ impl CPU {
                 let register = self.read_word();
                 let value = self.read_word();
                 let mut reg = ' ';
-                println!("{:#06X} {:#06X}", register, value);
 
                 match register {
                     0x0041 => {
                         self.a_reg /= value;
-                        println!("{}", self.a_reg);
                         reg = 'A'
                     }
                     0x0058 => {
                         self.x_reg /= value;
-                        println!("{}", self.x_reg);
                         reg = 'X'
                     }
                     0x0059 => {
                         self.y_reg /= value;
-                        println!("{}", self.y_reg);
                         reg = 'Y'
                     }
                     _ => {}
@@ -377,7 +374,7 @@ impl CPU {
 
                 #[cfg(debug_assertions)]
                 crate::debug!(
-                    "Subtracting value from Register",
+                    "Dividing register value by",
                     format!("Value: {} | Register: {}", value, reg)
                 );
             }

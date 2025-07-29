@@ -20,10 +20,12 @@ pub struct GPU {
     pub cursor: Cursor,
     pub cursor_visible: bool,
     pub draw_mode: bool,
+    pub draw_color: macroquad::color::Color,
     pub clock_speed: usize,
     pub pri_counter: usize,
     pub sec_counter: usize,
 }
+
 
 impl GPU {
     pub fn init() -> Self {
@@ -37,12 +39,13 @@ impl GPU {
         _ = file.read_to_string(&mut buffer);
 
         Self {
-            buf_ptr: 0x0300, // 0x0300 - 0x04FF => 768 - 1279, so 512 16-bit addresses
+            buf_ptr: 0x0300, // 0x0300 - 0x04FF => 768 - 1280, so 512 16-bit addresses
             memory: buffer.to_string(),
             frame_buffer: [[Character::new(' '); 48]; 92],
-            cursor: Cursor::init(),
+            cursor: Cursor::new(CursorShapes::Block),
             cursor_visible: false,
             draw_mode: false,
+            draw_color: macroquad::color::WHITE,
             clock_speed: 50_000, // In Hz
             pri_counter: 0,
             sec_counter: 0,
@@ -59,12 +62,18 @@ impl GPU {
 
     pub async fn draw_framebuffer(&mut self) {
         if self.cursor_visible {
+            let mut cursor = "_";
+            match self.cursor.shape {
+                CursorShapes::Block => cursor = "█",
+                CursorShapes::VertiBar => cursor = "|",
+                _ => {}
+            }
             macroquad::text::draw_text(
-                &format!("{}", "_") as &str,
+                cursor,
                 self.cursor.position.0 as f32 * 7.0 + 2.0,
                 self.cursor.position.1 as f32 * 12.0 + 10.0,
                 FONT_SIZE,
-                macroquad::color::WHITE, //Color::new(0.4,0.4,0.4,1.0)
+                self.draw_color
             );
         }
         for y in 0..40 {
@@ -160,9 +169,29 @@ impl GPU {
                         self.increase_buf_ptr();
                     }
                     _ => match instruction {
-                        0x00..=0x7F => {
-                            self.frame_buffer[self.cursor.position.0][self.cursor.position.1] =
-                                Character::new(char::from(instruction as u8));
+                        0xA000 => {},
+                        0x00..=0xFF7F => {
+                            let mut char = Character::new(char::from(instruction as u8));
+
+                            let color_byte = (instruction >> 8) as u8;
+                            let char_byte = (instruction & 0xFF) as u8;
+
+                            #[cfg(debug_assertions)]
+                            crate::debug!(
+                                format!("Color Byte: {:#04X}", color_byte),
+                                format!("Character Byte: {:#04X}", char_byte)
+                            );
+
+                            match CharColors::from_u8(color_byte).unwrap() {
+                                CharColors::Red => char.color = macroquad::color::RED,
+                                CharColors::Green => char.color = macroquad::color::GREEN,
+                                CharColors::Blue => char.color = macroquad::color::BLUE,
+                                CharColors::Cyan => char.color = macroquad::color::SKYBLUE,
+                                CharColors::Magenta => char.color = macroquad::color::MAGENTA,
+                                CharColors::White => char.color = macroquad::color::WHITE
+                            }
+
+                            self.frame_buffer[self.cursor.position.0][self.cursor.position.1] = char;
                             if self.cursor.position.0 < 91 {
                                 self.cursor.position.0 += 1;
                             } else {
@@ -175,7 +204,6 @@ impl GPU {
                             }
                             self.increase_buf_ptr();
                         }
-                        0xA0B0..=0xA0B4 => self.draw_mode = false,
                         _ => {}
                     },
                 }
@@ -260,10 +288,10 @@ pub struct Cursor {
 }
 
 impl Cursor {
-    pub fn init() -> Self {
+    pub fn new(shape: CursorShapes) -> Self {
         Self {
             position: Default::default(),
-            shape: CursorShapes::Block,
+            shape
         }
     }
 }
@@ -273,4 +301,28 @@ pub enum CursorShapes {
     Block,
     Underline,
     VertiBar,
+}
+
+#[repr(u8)]
+pub enum CharColors {
+    White = 0x0A,
+    Red = 0x0B,
+    Green = 0x0C,
+    Blue = 0x0D,
+    Cyan = 0x0E,
+    Magenta = 0x0F
+}
+
+impl CharColors {
+    fn from_u8(value: u8) -> Option<Self> {
+        match value {
+            0x0A => Some(CharColors::White),
+            0x0B => Some(CharColors::Red),
+            0x0C => Some(CharColors::Green),
+            0x0D => Some(CharColors::Blue),
+            0x0E => Some(CharColors::Cyan),
+            0x0F => Some(CharColors::Magenta),
+            _ => None,
+        }
+    }
 }

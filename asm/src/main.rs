@@ -3,6 +3,9 @@ use std::char;
 use std::io::{Write};
 use std::{fs::OpenOptions, io::Read};
 
+// TODO:
+// -- BUG: where GPU buf_ptr resets to 0x0300 when jump, jusr, juie or jine are used. The bug is in here, not the GPU code
+
 mod opcodes;
 
 fn main() {
@@ -209,8 +212,22 @@ fn main() {
                         memory[address as usize] = value;
                     }
                     "draw" => {
-                        if instruction.len() < 3 {
+                        if instruction.len() < 4 {
                             panic("Missing Argument", &instruction, code_line, 0);
+                        }
+                        let mut color_char = 0x0F;
+                        match instruction[3] {
+                            "col" => {
+                                match instruction[4] {
+                                    "red" => color_char = 0x0B,
+                                    "green" => color_char = 0x0C,
+                                    "blue" => color_char = 0x0D,
+                                    "cyan" => color_char = 0x0E,
+                                    "magenta" => color_char = 0x0F,
+                                    _ => {}
+                                }
+                            },
+                            _ => color_char = 0x0A,
                         }
                         match instruction[1] {
                             "str" => {
@@ -224,8 +241,11 @@ fn main() {
                                     if char == '^' {
                                         char = char::from_u32(0x0020).unwrap();
                                     }
+                                    let character_char = char;
+                                    let out_char = ((color_char << 8) as u16) | (character_char as u16);
+                                    println!("out_char: {:#06X}", out_char);
                                     memory[instr_ptr] = opcodes::LOAD_GREG;
-                                    memory[instr_ptr + 1] = char as u16;
+                                    memory[instr_ptr + 1] = out_char;
                                     memory[instr_ptr + 2] = opcodes::STOR_GREG;
                                     memory[instr_ptr + 3] = gpu_ptr as u16;
                                     gpu_ptr += 1;
@@ -246,12 +266,11 @@ fn main() {
                                 instr_ptr += 4;
                             }
                             "reg" => {
-                                let mut reg = parse_regs(&instruction, code_line, 2);
                                 let mut instr = 0;
-                                match reg {
-                                    0x0041 => { instr = opcodes::STOR_AREG; reg = 0; },
-                                    0x0058 => { instr = opcodes::STOR_XREG; reg = 1; },
-                                    0x0059 => { instr = opcodes::STOR_YREG; reg = 2; },
+                                match parse_regs(&instruction, code_line, 2) {
+                                    0x0041 => instr = opcodes::STOR_AREG,
+                                    0x0058 => instr = opcodes::STOR_XREG,
+                                    0x0059 => instr = opcodes::STOR_YREG,
                                     _ => {}
                                 }
                                 memory[instr_ptr] = opcodes::LOAD_GREG;
@@ -340,7 +359,7 @@ fn main() {
                         memory[instr_ptr] = opcodes::INC_REG_V;
                         memory[instr_ptr + 1] = reg;
                         memory[instr_ptr + 2] = value;
-                        //regs[reg as usize - 1] += value;
+                        regs[reg as usize - 1] += value;
                         instr_ptr += 3;
                     }
                     "rsub" => {
@@ -352,7 +371,7 @@ fn main() {
                         memory[instr_ptr] = opcodes::DEC_REG_V;
                         memory[instr_ptr + 1] = reg;
                         memory[instr_ptr + 2] = value;
-                        //regs[reg as usize - 1] += value;
+                        regs[reg as usize - 1] -= value;
                         instr_ptr += 3;
                     }
                     "rmul" => {
@@ -364,7 +383,7 @@ fn main() {
                         memory[instr_ptr] = opcodes::MUL_REG_V;
                         memory[instr_ptr + 1] = reg;
                         memory[instr_ptr + 2] = value;
-                        //regs[reg as usize - 1] += value;
+                        regs[reg as usize - 1] *= value;
                         instr_ptr += 3;
                     }
                     "rdiv" => {
@@ -376,7 +395,7 @@ fn main() {
                         memory[instr_ptr] = opcodes::DIV_REG_V;
                         memory[instr_ptr + 1] = reg;
                         memory[instr_ptr + 2] = value;
-                        //regs[reg as usize - 1] += value;
+                        regs[reg as usize - 1] /= value;
                         instr_ptr += 3;
                     }
                     "halt" => {
@@ -389,6 +408,7 @@ fn main() {
                 }
             }
         }
+        println!("gpu_ptr: {:#06X}\ninstr_ptr: {:#06X}\n", gpu_ptr, instr_ptr);
         code_line += 1;
     }
 
