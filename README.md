@@ -1,6 +1,8 @@
 # Rusty-VM
 Rusty-VM is a 16-bit virtual machine with completely made up hardware, architecture, instructions, you name it. It has its own Assembly-ish language called RvmASM and comes with an assembler that takes .rvmasm files
-and turns them into a memory file with binary content for the VM to read and write to. The goal is to have a fully functional 16-bit virtual machine that can run any program or even OS made for it using RvmASM
+and turns them into a memory file with binary content for the VM to read and write to. The goal is to have a fully functional 16-bit virtual machine that can run any program or even OS made for it using RvmASM.
+
+#### [RvmASM Documentation](https://github.com/LordAfterEight/rusty-vm/tree/master/asm)
 
 ### The VM is currently under development and far from being finished. Most of what you read here is probably not implemented yet.
 |State           |  Symbol|
@@ -46,7 +48,7 @@ The VM consists of (currently) three key parts: the CPU, the GPU and the memory
   <details>
     <Summary> OpCodes 🟡 </Summary>
     Right now there is a total of 30 OpCodes
-    For a detailed documentation see the [RvmASM documentation](https://github.com/LordAfterEight/rusty-vm/tree/master/asm).
+    For a detailed documentation see the RvmASM documentation linked at the top.
     
   </details>
 
