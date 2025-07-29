@@ -33,7 +33,7 @@ The VM consists of (currently) three key parts: the CPU, the GPU and the memory
 <details>
   <Summary> CPU 🟡 </Summary>
   <details>
-    <Summary> Registers </Summary>
+    <Summary> Registers ✅ </Summary>
     
     | Register | Purpose                                                              |
     |----------|----------------------------------------------------------------------|
@@ -43,6 +43,13 @@ The VM consists of (currently) three key parts: the CPU, the GPU and the memory
     | G        | 16-bit register used for CPU-GPU interaction, not accessible in code |
 
   </details>
+  <details>
+    <Summary> OpCodes 🟡 </Summary>
+    Right now there is a total of 30 OpCodes
+    For a detailed documentation see the [RvmASM documentation](https://github.com/LordAfterEight/rusty-vm/tree/master/asm).
+    
+  </details>
+
 </details>
 
 #
