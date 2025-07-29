@@ -1,5 +1,12 @@
 # RvmASM Assembler
-This is the assembler for ```.rvmasm``` files. It will parse any file of that type and convert it into a text file with binary content for Rusty-VM to read
+This is the assembler for ```.rvmasm``` files. It will parse any file of that type and convert it into a text file with binary content for Rusty-VM to read. to use it, first run the following command:
+```shell
+cargo install --path .
+```
+Now you can use the ```rvmasm``` command to build a binary from any ```.rvmasm``` input file:
+```shell
+rvmasm code.rvmasm
+```
 
 # Documentation
 RvmASM is an Assembly-ish language for my 16-bit virtual machine Rusty-VM. I made this assembly language and its parser to allow me and maybe even others to easily create programs for the virtual machine without needing to write raw binary values into a file. It is currently under development, just like the virtual machine itself, so both are far from being finished. Under this paragraph you will find a documentation of the entire language. This documentation will constantly change as more features and content are added to the language.
