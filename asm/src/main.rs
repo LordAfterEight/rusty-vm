@@ -264,7 +264,6 @@ fn main() {
                                     let character_char = char;
                                     let out_char =
                                         ((color_char << 8) as u16) | (character_char as u16);
-                                    println!("out_char: {:#06X}", out_char);
                                     memory[instr_ptr] = opcodes::LOAD_GREG;
                                     memory[instr_ptr + 1] = out_char;
                                     memory[instr_ptr + 2] = opcodes::STOR_GREG;
