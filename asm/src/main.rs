@@ -235,7 +235,7 @@ fn main() {
                         if instruction.len() < 3 {
                             panic("Missing Argument", &instruction, code_line, 0);
                         }
-                        let mut color_char = 0x0F;
+                        let mut color_char = 0x0A;
                         if instruction.len() > 3 {
                             match instruction[3] {
                                 "col" => match instruction[4] {
