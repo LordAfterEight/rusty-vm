@@ -1,5 +1,14 @@
 // Program starts at 0x0500
-draw str Hello^ col cyan
-draw str World! col magenta
+load A num 1
+draw reg A
 cmov nl
+
+radd A num 9
+draw reg A
+cmov nl
+
+rmul A num 10
+draw reg A
+cmov nl
+
 halt

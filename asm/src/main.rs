@@ -212,22 +212,24 @@ fn main() {
                         memory[address as usize] = value;
                     }
                     "draw" => {
-                        if instruction.len() < 4 {
+                        if instruction.len() < 3 {
                             panic("Missing Argument", &instruction, code_line, 0);
                         }
                         let mut color_char = 0x0F;
-                        match instruction[3] {
-                            "col" => {
-                                match instruction[4] {
-                                    "red" => color_char = 0x0B,
-                                    "green" => color_char = 0x0C,
-                                    "blue" => color_char = 0x0D,
-                                    "cyan" => color_char = 0x0E,
-                                    "magenta" => color_char = 0x0F,
-                                    _ => {}
-                                }
-                            },
-                            _ => color_char = 0x0A,
+                        if instruction.len() > 3 {
+                            match instruction[3] {
+                                "col" => {
+                                    match instruction[4] {
+                                        "red" => color_char = 0x0B,
+                                        "green" => color_char = 0x0C,
+                                        "blue" => color_char = 0x0D,
+                                        "cyan" => color_char = 0x0E,
+                                        "magenta" => color_char = 0x0F,
+                                        _ => {}
+                                    }
+                                },
+                                _ => color_char = 0x0A,
+                            }
                         }
                         match instruction[1] {
                             "str" => {
@@ -280,7 +282,7 @@ fn main() {
                                 gpu_ptr += 1;
                                 instr_ptr += 4;
 
-                                memory[instr_ptr] = instr;
+                                memory[instr_ptr] = instr as u16;
                                 memory[instr_ptr + 1] = gpu_ptr as u16;
                                 gpu_ptr += 1;
                                 instr_ptr += 2;
@@ -359,7 +361,6 @@ fn main() {
                         memory[instr_ptr] = opcodes::INC_REG_V;
                         memory[instr_ptr + 1] = reg;
                         memory[instr_ptr + 2] = value;
-                        regs[reg as usize - 1] += value;
                         instr_ptr += 3;
                     }
                     "rsub" => {
@@ -371,7 +372,6 @@ fn main() {
                         memory[instr_ptr] = opcodes::DEC_REG_V;
                         memory[instr_ptr + 1] = reg;
                         memory[instr_ptr + 2] = value;
-                        regs[reg as usize - 1] -= value;
                         instr_ptr += 3;
                     }
                     "rmul" => {
@@ -383,7 +383,6 @@ fn main() {
                         memory[instr_ptr] = opcodes::MUL_REG_V;
                         memory[instr_ptr + 1] = reg;
                         memory[instr_ptr + 2] = value;
-                        regs[reg as usize - 1] *= value;
                         instr_ptr += 3;
                     }
                     "rdiv" => {
@@ -395,7 +394,6 @@ fn main() {
                         memory[instr_ptr] = opcodes::DIV_REG_V;
                         memory[instr_ptr + 1] = reg;
                         memory[instr_ptr + 2] = value;
-                        regs[reg as usize - 1] /= value;
                         instr_ptr += 3;
                     }
                     "halt" => {
@@ -408,7 +406,6 @@ fn main() {
                 }
             }
         }
-        println!("gpu_ptr: {:#06X}\ninstr_ptr: {:#06X}\n", gpu_ptr, instr_ptr);
         code_line += 1;
     }
 

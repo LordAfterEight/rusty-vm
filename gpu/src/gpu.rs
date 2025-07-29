@@ -170,7 +170,7 @@ impl GPU {
                     }
                     _ => match instruction {
                         0xA000 => {},
-                        0x00..=0xFF7F => {
+                        0x00..=0xFF7A => {
                             let mut char = Character::new(char::from(instruction as u8));
 
                             let color_byte = (instruction >> 8) as u8;
@@ -316,6 +316,7 @@ pub enum CharColors {
 impl CharColors {
     fn from_u8(value: u8) -> Option<Self> {
         match value {
+            0x00 => Some(CharColors::White),
             0x0A => Some(CharColors::White),
             0x0B => Some(CharColors::Red),
             0x0C => Some(CharColors::Green),
