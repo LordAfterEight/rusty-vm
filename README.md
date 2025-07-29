@@ -31,7 +31,7 @@ The VM consists of (currently) three key parts: the CPU, the GPU and the memory
 
 </details>
 
-# Specs
+# Features
 <details>
   <Summary> CPU 🟡 </Summary>
   <details>
@@ -48,9 +48,10 @@ The VM consists of (currently) three key parts: the CPU, the GPU and the memory
   <details>
     <Summary> OpCodes 🟡 </Summary>
     Right now there is a total of 30 OpCodes.
-    
   </details>
-
+  <details>
+    <Summary> Hardware Interrupts / Input ❌ </Summary>
+  </details>
 </details>
 
 #
