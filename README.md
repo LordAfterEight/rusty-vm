@@ -49,8 +49,6 @@ The VM consists of (currently) three key parts: the CPU, the GPU and the memory
     <Summary> OpCodes 🟡 </Summary>
     Right now there is a total of 30 OpCodes.
     
-  ### For a details have a look at the RvmASM documentation linked at the top.
-    
   </details>
 
 </details>
