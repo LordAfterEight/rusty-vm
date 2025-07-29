@@ -1,6 +1,6 @@
 use colored::Colorize;
 use std::char;
-use std::io::{stdin, Write};
+use std::io::{Write, stdin};
 use std::{fs::OpenOptions, io::Read};
 
 // TODO:
@@ -11,25 +11,39 @@ mod opcodes;
 fn main() {
     let mut memory = [0; u16::MAX as usize];
 
-    let path = std::env::args()
+    let in_path = std::env::args()
         .skip(1)
         .next()
         .ok_or("No input file provided")
         .unwrap();
 
+    let out_path = std::env::args()
+        .skip(2)
+        .next()
+        .ok_or("No output directory provided");
 
-    println!("Attempting to open file: {}", format!("{}/{}", env!("CARGO_MANIFEST_DIR"), path));
+    println!(
+        "Assembling: {}",
+        format!("{}/{}", env!("CARGO_MANIFEST_DIR"), in_path)
+    );
+
     let mut code = OpenOptions::new()
         .read(true)
-        .open(format!("{}", path))
+        .open(format!("{}", in_path))
         .unwrap();
 
-    println!("Opening memory file...");
+    std::process::Command::new("touch")
+        .arg(format!("{}", out_path.clone().unwrap()))
+        .spawn()
+        .unwrap();
+
+    std::thread::sleep(std::time::Duration::from_millis(100));
+
     let mut img_file = OpenOptions::new()
         .write(true)
         .truncate(true)
-        .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
-        .unwrap();
+        .open(format!("{}", out_path.unwrap()))
+        .expect("ROM file must exist");
 
     let mut code_string = String::new();
     _ = code.read_to_string(&mut code_string).unwrap().to_string();
@@ -113,7 +127,6 @@ fn main() {
 
     let mut code_line = 1;
 
-    println!("Programming memory...\n");
     for line in code_string.lines() {
         let instruction: Vec<&str> = line.split(' ').collect();
         match instruction[0] {
@@ -225,15 +238,13 @@ fn main() {
                         let mut color_char = 0x0F;
                         if instruction.len() > 3 {
                             match instruction[3] {
-                                "col" => {
-                                    match instruction[4] {
-                                        "red" => color_char = 0x0B,
-                                        "green" => color_char = 0x0C,
-                                        "blue" => color_char = 0x0D,
-                                        "cyan" => color_char = 0x0E,
-                                        "magenta" => color_char = 0x0F,
-                                        _ => {}
-                                    }
+                                "col" => match instruction[4] {
+                                    "red" => color_char = 0x0B,
+                                    "green" => color_char = 0x0C,
+                                    "blue" => color_char = 0x0D,
+                                    "cyan" => color_char = 0x0E,
+                                    "magenta" => color_char = 0x0F,
+                                    _ => {}
                                 },
                                 _ => color_char = 0x0A,
                             }
@@ -251,7 +262,8 @@ fn main() {
                                         char = char::from_u32(0x0020).unwrap();
                                     }
                                     let character_char = char;
-                                    let out_char = ((color_char << 8) as u16) | (character_char as u16);
+                                    let out_char =
+                                        ((color_char << 8) as u16) | (character_char as u16);
                                     println!("out_char: {:#06X}", out_char);
                                     memory[instr_ptr] = opcodes::LOAD_GREG;
                                     memory[instr_ptr + 1] = out_char;

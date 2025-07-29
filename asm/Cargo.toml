@@ -2,6 +2,10 @@
 name = "rvmasm"
 version = "0.1.0"
 edition = "2024"
+tags = ["assembler", "vm", "virtual machine"]
+license = "MIT"
+description = "Assembler for RvmASM"
+readme = "README.md"
 
 [dependencies]
 colored = "3.0.0"
