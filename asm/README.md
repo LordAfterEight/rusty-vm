@@ -5,7 +5,7 @@ cargo install --path .
 ```
 Now you can use the ```rvmasm``` command to build a binary from any ```.rvmasm``` input file:
 ```shell
-rvmasm code.rvmasm
+rvmasm code.rvmasm output
 ```
 
 # Documentation
