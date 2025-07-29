@@ -18,6 +18,8 @@ RvmASM is an Assembly-ish language for my 16-bit virtual machine Rusty-VM. I mad
    - [jusr](#jusr)
    - [juie](#juie)
    - [jine](#jine)
+   - [rtor](#rtor)
+   - [noop](#noop)
    - [setv](#setv)
    - [comp](#comp)
    - [radd](#radd)
@@ -172,7 +174,7 @@ rtor    # This doesn't take any arguments
   
 ```noop``` Simply makes the CPU do nothing for one cycle. Example:
 ```ruby
-noop    # Returns from a subroutine. This doesn't take any arguments
+noop    # Makes the CPU do nothing for one cycle
 ```
 </details>
 
