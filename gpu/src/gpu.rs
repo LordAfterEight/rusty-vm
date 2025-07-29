@@ -183,12 +183,12 @@ impl GPU {
                             );
 
                             match CharColors::from_u8(color_byte).unwrap() {
+                                CharColors::White => char.color = macroquad::color::WHITE,
                                 CharColors::Red => char.color = macroquad::color::RED,
                                 CharColors::Green => char.color = macroquad::color::GREEN,
                                 CharColors::Blue => char.color = macroquad::color::BLUE,
                                 CharColors::Cyan => char.color = macroquad::color::Color::new(0.5,0.9,1.0,1.0),
                                 CharColors::Magenta => char.color = macroquad::color::MAGENTA,
-                                CharColors::White => char.color = macroquad::color::WHITE
                             }
 
                             self.frame_buffer[self.cursor.position.0][self.cursor.position.1] = char;
