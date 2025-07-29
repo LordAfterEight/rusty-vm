@@ -1,20 +1,27 @@
 use colored::Colorize;
 use std::char;
-use std::io::{Write};
+use std::io::{stdin, Write};
 use std::{fs::OpenOptions, io::Read};
 
 // TODO:
-// -- BUG: where GPU buf_ptr resets to 0x0300 when jump, jusr, juie or jine are used. The bug is in here, not the GPU code
+// -- FIX: bug where GPU buf_ptr resets to 0x0300 when jump, jusr, juie or jine are used. The bug is in here, not the GPU code
 
 mod opcodes;
 
 fn main() {
     let mut memory = [0; u16::MAX as usize];
 
-    println!("Opening code file...");
+    let path = std::env::args()
+        .skip(1)
+        .next()
+        .ok_or("No input file provided")
+        .unwrap();
+
+
+    println!("Attempting to open file: {}", format!("{}/{}", env!("CARGO_MANIFEST_DIR"), path));
     let mut code = OpenOptions::new()
         .read(true)
-        .open(format!("{}/../code.rvmasm", env!("CARGO_MANIFEST_DIR")))
+        .open(format!("{}", path))
         .unwrap();
 
     println!("Opening memory file...");
