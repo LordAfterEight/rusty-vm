@@ -12,14 +12,14 @@ rvmasm code.rvmasm output
 RvmASM is an Assembly-ish language for my 16-bit virtual machine Rusty-VM. I made this assembly language and its parser to allow me and maybe even others to easily create programs for the virtual machine without needing to write raw binary values into a file. It is currently under development, just like the virtual machine itself, so both are far from being finished. Under this paragraph you will find a documentation of the entire language. This documentation will constantly change as more features and content are added to the language.
 
 # Table of Contents
-1. [Keywords](#Keywords)
+### 1. [Keywords](#Keywords)
    - [lit](#lit)
    - [hex](#hex)
    - [num](#num)
    - [str](#str)
    - [col](#col)
    
-## 2. [Instructions](#Instructions)
+### 2. [Instructions](#Instructions)
 
 
 | Jump | Register | Arithmetics | Miscellaneous |
