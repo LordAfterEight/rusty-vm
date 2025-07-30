@@ -39,7 +39,7 @@ impl GPU {
         _ = file.read_to_string(&mut buffer);
 
         Self {
-            buf_ptr: 0x0300, // 0x0300 - 0x04FF => 768 - 1280, so 512 16-bit addresses
+            buf_ptr: 0x1000, // 0x0300 - 0x0FFF => 768 - 4096, so 3328 16-bit addresses
             memory: buffer.to_string(),
             frame_buffer: [[Character::new(' '); 48]; 92],
             cursor: Cursor::new(CursorShapes::Block),
@@ -92,6 +92,26 @@ impl GPU {
 
     pub async fn update(&mut self) {
         self.pri_counter += 1;
+
+        if macroquad::input::is_quit_requested() {
+            let args: Vec<String> = env::args().collect();
+
+            #[cfg(target_os = "linux")]
+            let parent_pid: i32 = args[1].parse().expect("Invalid PID");
+
+            #[cfg(target_os = "windows")]
+            let parent_pid: i32 = &args[1];
+
+            #[cfg(target_os = "linux")]
+            kill(Pid::from_raw(parent_pid), Signal::SIGKILL).expect("Failed to kill parent");
+
+            #[cfg(target_os = "windows")]
+            Command::new("taskkill")
+                .args(&["/PID", parent_pid, "/F"])
+                .spawn()
+                .expect("Failed to kill parent process");
+            std::process::exit(0);
+        }
 
         if self.pri_counter == 99 {
             if macroquad::input::is_key_pressed(macroquad::input::KeyCode::Escape) {

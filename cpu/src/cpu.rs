@@ -52,7 +52,7 @@ impl CPU {
         Self {
             name: String::from("OwO CPU"),
 
-            instr_ptr: 0x0500, // NOTE: Code space is 0x0500 - 0xFFFE => So 64254 spaces for programs
+            instr_ptr: 0x1000, // NOTE: Code space is 0x1000 - 0xFFFE => So 64254 spaces for programs
             stack_ptr: 0x00,   // NOTE: 0x00 - 0x1FF => 0 - 511, so 512 16-bit addresses in the stack
 
             a_reg: Default::default(),
@@ -64,7 +64,7 @@ impl CPU {
             halt_flag: false,
             eq_flag: false,
 
-            clock_speed: 50_000, // in Hz
+            clock_speed: 5,//0_000, // in Hz
 
             memory: crate::memory::Memory::init(),
         }
@@ -73,7 +73,7 @@ impl CPU {
     pub fn increase_instr_ptr(&mut self) {
         match self.instr_ptr {
             0xFFFE => {
-                self.instr_ptr = 0x0500;
+                self.instr_ptr = 0x1000;
                 #[cfg(debug_assertions)]
                 crate::debug!("Reached end of memory");
             }

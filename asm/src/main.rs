@@ -87,7 +87,7 @@ fn main() {
     // NOTE: GPU BUFFER
     // Filling GPU buffer with GPU NoOps
     //
-    for i in 0..512 {
+    for i in 0..3327 {
         memory[0x0300 + i] = opcodes::GPU_NO_OPERAT;
     }
 
@@ -119,7 +119,7 @@ fn main() {
     // NOTE: PROGRAM
     // --- Modify Memory at Runtime ---
 
-    let mut instr_ptr: usize = 0x0500;
+    let mut instr_ptr: usize = 0x1000;
     let mut gpu_ptr: usize = 0x0300;
 
     let mut regs = vec![0, 0, 0];
