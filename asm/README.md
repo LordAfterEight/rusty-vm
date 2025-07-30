@@ -18,21 +18,18 @@ RvmASM is an Assembly-ish language for my 16-bit virtual machine Rusty-VM. I mad
    - [num](#num)
    - [str](#str)
    - [col](#col)
-2. [Instructions](#Instructions)
-   - [load](#load)
-   - [stor](#stor)
-   - [jump](#jump)
-   - [jusr](#jusr)
-   - [juie](#juie)
-   - [jine](#jine)
-   - [rtor](#rtor)
-   - [noop](#noop)
-   - [setv](#setv)
-   - [comp](#comp)
-   - [radd](#radd)
-   - [rsub](#rsub)
-   - [rmul](#rmul)
-   - [rdiv](#rdiv)
+   
+## 2. [Instructions](#Instructions)
+
+
+| Jump | Register | Arithmetics | Miscellaneous |
+|-------------|-------------|-------------|-------------|
+|[jump](#jump)|[load](#load)|[comp](#comp)|[noop](#noop)|
+|[jusr](#jusr)|[stor](#stor)|[radd](#radd)|[setv](#setv)|
+|[juie](#juie)|             |[rsub](#rsub)|
+|[jine](#jine)|             |[rmul](#rmul)|
+|[rtor](#rtor)|             |[rdiv](#rdiv)|
+
 
 ## Keywords <a name="Keywords"></a>
 These are used to determine what type the following value will be converted to.
