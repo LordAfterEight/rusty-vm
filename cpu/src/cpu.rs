@@ -64,7 +64,7 @@ impl CPU {
             halt_flag: false,
             eq_flag: false,
 
-            clock_speed: 5,//0_000, // in Hz
+            clock_speed: 50_000, // in Hz
 
             memory: crate::memory::Memory::init(),
         }

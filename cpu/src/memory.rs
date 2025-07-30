@@ -27,7 +27,6 @@ impl Memory {
         _ = buffer.trim_start();
 
         for line in buffer.lines() {
-            print!("{}", line);
             rom[counter] = u16::from_str_radix(line, 2).unwrap();
             counter += 1;
         }

@@ -83,10 +83,16 @@ pub const DIV_REG_V: u16 = 0x00D5;
 pub const GPU_NO_OPERAT: u16 = 0xA000;
 
 // --- OpCodes: Draw Letter ---
-/// GPU OpCode: Reads the following value and attempts to convert it to ASCII and draw it to the
+/// GPU OpCode: Treats the following value as a char, attempts to convert it to ASCII and draw it to the
 ///             screen, automatically moving the cursor. If the value is invalid, it will output
 ///             a medium shade ('▒') character.
 pub const GPU_DRAW_LETT: u16 = 0xA001;
+
+// --- OpCodes: Draw Value ---
+/// GPU OpCode: Treats the following value as an integer, attempts to convert it to ASCII and draw it to the
+///             screen, automatically moving the cursor. If the value is invalid, it will output
+///             a medium shade ('▒') character.
+pub const GPU_DRAW_VALU: u16 = 0xA003;
 
 // --- OpCodes: Reset Buf Ptr ---
 /// GPU OpCode: Resets the GPU's buf_ptr to the beginning of the GPU buffer.

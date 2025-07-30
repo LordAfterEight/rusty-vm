@@ -24,6 +24,7 @@ pub struct GPU {
     pub clock_speed: usize,
     pub pri_counter: usize,
     pub sec_counter: usize,
+    pub int_flag: bool,
 }
 
 
@@ -39,21 +40,22 @@ impl GPU {
         _ = file.read_to_string(&mut buffer);
 
         Self {
-            buf_ptr: 0x1000, // 0x0300 - 0x0FFF => 768 - 4096, so 3328 16-bit addresses
+            buf_ptr: 0x0300, // 0x0300 - 0x0FFF => 768 - 4096, so 3328 16-bit addresses
             memory: buffer.to_string(),
             frame_buffer: [[Character::new(' '); 48]; 92],
             cursor: Cursor::new(CursorShapes::Block),
             cursor_visible: false,
             draw_mode: false,
             draw_color: macroquad::color::WHITE,
-            clock_speed: 50_000, // In Hz
+            clock_speed: 10_000, // In Hz
             pri_counter: 0,
             sec_counter: 0,
+            int_flag: false,
         }
     }
 
     pub fn increase_buf_ptr(&mut self) {
-        if self.buf_ptr + 1 > 0x04FF {
+        if self.buf_ptr + 1 > 0x0FFF {
             self.buf_ptr = 0x0300;
         } else {
             self.buf_ptr += 1;
@@ -114,7 +116,7 @@ impl GPU {
         }
 
         if self.pri_counter == 99 {
-            if macroquad::input::is_key_pressed(macroquad::input::KeyCode::Escape) {
+            if macroquad::input::is_key_down(macroquad::input::KeyCode::Escape) {
                 let args: Vec<String> = env::args().collect();
 
                 #[cfg(target_os = "linux")]
@@ -166,11 +168,13 @@ impl GPU {
 
             let instruction = u16::from_str_radix(trimmed, 2).unwrap();
 
+            /*
             #[cfg(debug_assertions)]
             crate::debug!(
                 format!("Address: {:#06X}", self.buf_ptr),
                 format!("Instruction: {:#06X}", instruction)
             );
+            */
 
             // --- Handle GPU Instructions ---
             if self.draw_mode == true {
@@ -180,8 +184,14 @@ impl GPU {
                     crate::hex!(instruction)
                 );
 
+                let instr = instruction as u8;
+
+                if self.int_flag {
+
+                }
+
                 // --- Handle chars ---
-                match char::from(instruction as u8) {
+                match char::from(instr) {
                     '`' => {
                         #[cfg(debug_assertions)]
                         crate::debug!("Detected escape character: Exiting draw mode");
@@ -230,14 +240,23 @@ impl GPU {
             } else {
                 match instruction {
                     opcodes::GPU_NO_OPERAT => {
+                        /*
                         #[cfg(debug_assertions)]
                         crate::debug!("NoOp");
+                        */
                     }
                     opcodes::GPU_DRAW_LETT => {
                         #[cfg(debug_assertions)]
                         crate::debug!("Entering draw mode");
                         self.increase_buf_ptr();
                         self.draw_mode = true;
+                    }
+                    opcodes::GPU_DRAW_VALU => {
+                        #[cfg(debug_assertions)]
+                        crate::debug!("Entering draw mode");
+                        self.increase_buf_ptr();
+                        self.draw_mode = true;
+                        self.int_flag = true;
                     }
                     opcodes::GPU_RESET_PTR => {
                         #[cfg(debug_assertions)]
@@ -343,7 +362,7 @@ impl CharColors {
             0x0D => Some(CharColors::Blue),
             0x0E => Some(CharColors::Cyan),
             0x0F => Some(CharColors::Magenta),
-            _ => None,
+            _ => Some(CharColors::White),
         }
     }
 }

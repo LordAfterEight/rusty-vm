@@ -87,7 +87,7 @@ fn main() {
     // NOTE: GPU BUFFER
     // Filling GPU buffer with GPU NoOps
     //
-    for i in 0..3327 {
+    for i in 0..3328 {
         memory[0x0300 + i] = opcodes::GPU_NO_OPERAT;
     }
 
@@ -177,9 +177,11 @@ fn main() {
                         if instruction.len() < 3 {
                             panic("Missing Argument", &instruction, code_line, 0);
                         }
+                        let new_addr = parse_hex_lit(&instruction, code_line, 1, 0);
+
                         memory[instr_ptr] = opcodes::JMP_TO_AD;
-                        memory[instr_ptr + 1] = parse_hex_lit(&instruction, code_line, 1, 0);
-                        instr_ptr += 2;
+                        memory[instr_ptr + 1] = new_addr;
+                        instr_ptr = new_addr as usize;
                     }
                     "jusr" => {
                         if instruction.len() < 2 {
@@ -294,7 +296,7 @@ fn main() {
                                     _ => {}
                                 }
                                 memory[instr_ptr] = opcodes::LOAD_GREG;
-                                memory[instr_ptr + 1] = opcodes::GPU_DRAW_LETT;
+                                memory[instr_ptr + 1] = opcodes::GPU_DRAW_VALU;
                                 memory[instr_ptr + 2] = opcodes::STOR_GREG;
                                 memory[instr_ptr + 3] = gpu_ptr as u16;
                                 gpu_ptr += 1;
