@@ -1,6 +1,6 @@
-mod cpu;
-mod memory;
-mod opcodes;
+pub mod cpu;
+pub mod memory;
+pub mod opcodes;
 
 // --- Use Font Size of 20 to have 40 rows and 63 collumns
 pub const FONT_SIZE: f32 = 12.0;
@@ -17,9 +17,11 @@ pub const FONT_SIZE: f32 = 12.0;
 // 0x0300 - 0x04FF | GPU BUFFER (512 16-bit / 1024B)
 
 fn main() {
+    #[cfg(target_os = "windows")]
+    println!("Sucks to be on windows");
+
     let mut cpu = cpu::CPU::init();
     //_ = clearscreen::clear();
-
 
     loop {
         if cpu.halt_flag == false {

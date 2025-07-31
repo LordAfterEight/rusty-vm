@@ -26,19 +26,29 @@ pub struct CPU {
 
 impl CPU {
     pub fn init() -> Self {
-        let mut path = String::new();
+        #[cfg(all(debug_assertions, not(target_os = "windows")))]
+        let path = format!(
+            "{}/target/debug/rusty-vm_gpu",
+            env!("CARGO_MANIFEST_DIR")
+        );
 
-        if cfg!(debug_assertions) {
-            path = format!(
-                "{}/../gpu/target/debug/rusty-vm_gpu",
-                env!("CARGO_MANIFEST_DIR")
-            );
-        } else {
-            path = format!(
-                "{}/../gpu/target/release/rusty-vm_gpu",
-                env!("CARGO_MANIFEST_DIR")
-            );
-        }
+        #[cfg(all(not(debug_assertions), not(target_os = "windows")))]
+        let path = format!(
+            "{}/target/release/rusty-vm_gpu",
+            env!("CARGO_MANIFEST_DIR")
+        );
+
+        #[cfg(all(debug_assertions, target_os = "windows"))]
+        let path = format!(
+            "{}\\target\\debug\\rusty-vm_gpu.exe",
+            env!("CARGO_MANIFEST_DIR")
+        );
+
+        #[cfg(all(not(debug_assertions), target_os = "windows"))]
+        let path = format!(
+            "{}\\target\\release\\rusty-vm_gpu.exe",
+            env!("CARGO_MANIFEST_DIR")
+        );
 
         #[cfg(not(target_os = "android"))] {
             #[cfg(debug_assertions)]
@@ -64,7 +74,7 @@ impl CPU {
             halt_flag: false,
             eq_flag: false,
 
-            clock_speed: 50_000, // in Hz
+            clock_speed: 50_000_000, // in Hz
 
             memory: crate::memory::Memory::init(),
         }

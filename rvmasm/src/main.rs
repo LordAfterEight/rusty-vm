@@ -32,10 +32,10 @@ fn main() {
         .open(format!("{}", in_path))
         .unwrap();
 
-    std::process::Command::new("touch")
+    /*std::process::Command::new("touch")
         .arg(format!("{}", out_path.clone().unwrap()))
         .spawn()
-        .unwrap();
+        .unwrap();*/
 
     std::thread::sleep(std::time::Duration::from_millis(100));
 
@@ -246,7 +246,7 @@ fn main() {
                                     "blue" => color_char = 0x0D,
                                     "cyan" => color_char = 0x0E,
                                     "magenta" => color_char = 0x0F,
-                                    _ => color_char = 0x00
+                                    _ => color_char = 0x00,
                                 },
                                 _ => color_char = 0x00,
                             }
@@ -433,6 +433,9 @@ fn main() {
 
     // NOTE: WRITE MEMORY TO FILE
     for line in memory.iter() {
+        // TODO: Write to file in binary format instead of bytes
+        // -> This would reduce the file size by 1/8th or 1/9th (if \n not needed too)
+        // Would need to use << operators to encode bits into a &mut [u8] file buffer
         _ = img_file.write_all(format!("{:016b}\n", line).as_bytes());
         if *line != 0x0000 {
             addr_used += 1;

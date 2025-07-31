@@ -1,0 +1,15 @@
+[package]
+name = "rusty-vm"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+colored = "3.0.0"
+clearscreen = "4.0.2"
+
+[workspace]
+members = [
+    "rusty-vm_gpu",
+    "rvmasm",
+]
+

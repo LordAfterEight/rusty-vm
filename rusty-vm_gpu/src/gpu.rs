@@ -2,6 +2,8 @@ use crate::opcodes;
 use std::fs::OpenOptions;
 use std::io::Read;
 
+use std::process::Command;
+
 use std::env;
 
 #[cfg(target_os = "linux")]
@@ -30,9 +32,16 @@ pub struct GPU {
 
 impl GPU {
     pub fn init() -> Self {
+        #[cfg(not(target_os = "windows"))]
         let img = OpenOptions::new()
             .read(true)
             .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
+            .expect("Memory image missing");
+
+        #[cfg(target_os = "windows")]
+        let img = OpenOptions::new()
+            .read(true)
+            .open(format!("{}\\..\\ROM", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         let mut file = img;
@@ -102,17 +111,17 @@ impl GPU {
             let parent_pid: i32 = args[1].parse().expect("Invalid PID");
 
             #[cfg(target_os = "windows")]
-            let parent_pid: i32 = &args[1];
+            let parent_pid: &String = &args[1];
 
             #[cfg(target_os = "linux")]
             kill(Pid::from_raw(parent_pid), Signal::SIGKILL).expect("Failed to kill parent");
 
-            #[cfg(target_os = "windows")]
+            /*#[cfg(target_os = "windows")]
             Command::new("taskkill")
                 .args(&["/PID", parent_pid, "/F"])
                 .spawn()
                 .expect("Failed to kill parent process");
-            std::process::exit(0);
+            std::process::exit(0);*/
         }
 
         if self.pri_counter == 99 {
@@ -123,16 +132,16 @@ impl GPU {
                 let parent_pid: i32 = args[1].parse().expect("Invalid PID");
 
                 #[cfg(target_os = "windows")]
-                let parent_pid: i32 = &args[1];
+                let parent_pid: &String = &args[1];
 
                 #[cfg(target_os = "linux")]
                 kill(Pid::from_raw(parent_pid), Signal::SIGKILL).expect("Failed to kill parent");
 
-                #[cfg(target_os = "windows")]
+                /*#[cfg(target_os = "windows")]
                 Command::new("taskkill")
                     .args(&["/PID", parent_pid, "/F"])
                     .spawn()
-                    .expect("Failed to kill parent process");
+                    .expect("Failed to kill parent process");*/
 
                 std::process::exit(0);
             }
@@ -145,9 +154,16 @@ impl GPU {
             self.pri_counter = 0;
         }
 
+        #[cfg(not(target_os = "windows"))]
         let img = OpenOptions::new()
             .read(true)
             .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
+            .expect("Memory image missing");
+
+        #[cfg(target_os = "windows")]
+        let img = OpenOptions::new()
+            .read(true)
+            .open(format!("{}\\..\\ROM", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         let mut file = img;
@@ -300,7 +316,7 @@ impl GPU {
             }
         }
         std::thread::sleep(std::time::Duration::from_micros(
-            1_000_000 / self.clock_speed as u64,
+            1_000_000_000 / self.clock_speed as u64,
         ));
     }
 }

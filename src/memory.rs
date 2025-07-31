@@ -5,8 +5,8 @@ use crate::opcodes;
 
 #[derive(Debug)]
 pub struct Memory {
-    pub rom: [u16;65536],
-    pub ram: [u16;1024]
+    pub rom: [u16; 65536],
+    pub ram: [u16; 1024],
 }
 
 impl Memory {
@@ -14,14 +14,14 @@ impl Memory {
     pub fn init() -> Self {
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/ROM", env!("CARGO_MANIFEST_DIR")))
             .unwrap();
 
         let mut file = img;
         let mut buffer = &mut String::new();
         _ = file.read_to_string(&mut buffer);
 
-        let mut rom = [0;65536];
+        let mut rom = [0; 65536];
         let mut counter = 0;
 
         _ = buffer.trim_start();
@@ -33,14 +33,14 @@ impl Memory {
 
         Self {
             rom,
-            ram: [opcodes::NO_OPERAT;1024]
+            ram: [opcodes::NO_OPERAT; 1024],
         }
     }
 
     pub fn update(&mut self, instr_ptr: u16) {
         let img = OpenOptions::new()
             .write(true)
-            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/ROM", env!("CARGO_MANIFEST_DIR")))
             .unwrap();
 
         let mut file = img;
