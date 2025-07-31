@@ -32,10 +32,10 @@ fn main() {
         .open(format!("{}", in_path))
         .unwrap();
 
-    std::process::Command::new("touch")
+    /*std::process::Command::new("touch")
         .arg(format!("{}", out_path.clone().unwrap()))
         .spawn()
-        .unwrap();
+        .unwrap();*/
 
     std::thread::sleep(std::time::Duration::from_millis(100));
 
