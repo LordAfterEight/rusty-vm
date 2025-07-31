@@ -14,7 +14,7 @@ pub const FONT_SIZE: f32 = 12.0;
 // 0x0240 - 0x0249 | 0 - 9
 // 0x024A - 0x024F | : _ | & ? @
 // 0x0250          | EMPTY CHAR (0x0020)
-// 0x0300 - 0x04FF | GPU BUFFER (512 16-bit / 1024B)
+// 0x0300 - 0x0FFF | GPU BUFFER (3328 16-bit / 6656B)
 
 fn main() {
     #[cfg(target_os = "windows")]

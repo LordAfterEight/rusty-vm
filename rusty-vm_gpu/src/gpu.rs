@@ -120,8 +120,8 @@ impl GPU {
             Command::new("taskkill")
                 .args(&["/PID", parent_pid, "/F"])
                 .spawn()
-                .expect("Failed to kill parent process");
-            std::process::exit(0);*/
+                .expect("Failed to kill parent process");*/
+            std::process::exit(0);
         }
 
         if self.pri_counter == 99 {

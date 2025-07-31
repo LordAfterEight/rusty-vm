@@ -4,7 +4,6 @@ use std::io::{Write, stdin};
 use std::{fs::OpenOptions, io::Read};
 
 // TODO:
-// -- FIX: bug where GPU buf_ptr resets to 0x0300 when jump, jusr, juie or jine are used. The bug is in here, not the GPU code
 
 mod opcodes;
 
