@@ -26,19 +26,17 @@ pub struct CPU {
 
 impl CPU {
     pub fn init() -> Self {
-        let mut path = String::new();
+        #[cfg(debug_assertions)]
+        let path = format!(
+            "{}/target/debug/rusty-vm_gpu",
+            env!("CARGO_MANIFEST_DIR")
+        );
 
-        if cfg!(debug_assertions) {
-            path = format!(
-                "{}/../gpu/target/debug/rusty-vm_gpu",
-                env!("CARGO_MANIFEST_DIR")
-            );
-        } else {
-            path = format!(
-                "{}/../gpu/target/release/rusty-vm_gpu",
-                env!("CARGO_MANIFEST_DIR")
-            );
-        }
+        #[cfg(not(debug_assertions))]
+        let path = format!(
+            "{}/target/release/rusty-vm_gpu",
+            env!("CARGO_MANIFEST_DIR")
+        );
 
         #[cfg(not(target_os = "android"))] {
             #[cfg(debug_assertions)]

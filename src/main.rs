@@ -1,6 +1,6 @@
-mod cpu;
-mod memory;
-mod opcodes;
+pub mod cpu;
+pub mod memory;
+pub mod opcodes;
 
 // --- Use Font Size of 20 to have 40 rows and 63 collumns
 pub const FONT_SIZE: f32 = 12.0;
@@ -19,7 +19,6 @@ pub const FONT_SIZE: f32 = 12.0;
 fn main() {
     let mut cpu = cpu::CPU::init();
     //_ = clearscreen::clear();
-
 
     loop {
         if cpu.halt_flag == false {

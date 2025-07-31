@@ -32,7 +32,7 @@ impl GPU {
     pub fn init() -> Self {
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/ROM", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         let mut file = img;
@@ -147,7 +147,7 @@ impl GPU {
 
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/ROM", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         let mut file = img;
