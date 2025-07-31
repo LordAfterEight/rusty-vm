@@ -57,6 +57,10 @@ The VM consists of (currently) three key parts: the CPU, the GPU and the memory
 #
 
 <details>
-  <Summary> GPU </Summary>
-  A GPU with a 91x49 characters framebuffer, capable of printing colored text.
+  <Summary> GPU 🟡 </Summary>
+  <details>
+    <Summary>  Framebuffer ✅ </Summary>
+    The GPU's framebuffer is 91x49 characters in size
+
+  </details>
 </details>
