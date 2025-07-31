@@ -316,7 +316,7 @@ impl GPU {
             }
         }
         std::thread::sleep(std::time::Duration::from_micros(
-            1_000_000_000 / self.clock_speed as u64,
+            1_000_000 / self.clock_speed as u64,
         ));
     }
 }
