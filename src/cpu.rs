@@ -246,6 +246,8 @@ impl CPU {
 
                 if val_1 == val_2 {
                     self.eq_flag = true;
+                } else {
+                    self.eq_flag = false;
                 }
 
                 #[cfg(debug_assertions)]

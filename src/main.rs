@@ -2,7 +2,6 @@ pub mod cpu;
 pub mod memory;
 pub mod opcodes;
 
-// --- Use Font Size of 20 to have 40 rows and 63 collumns
 pub const FONT_SIZE: f32 = 12.0;
 
 // NOTE: MEMORY LAYOUT

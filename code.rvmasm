@@ -1,43 +1,15 @@
 // Program starts at 0x1000
-draw str Testing^addition...^
-load A num 1 // 0x105B
-radd A num 1 // 0x105E
-comp reg A num 65535
-jine lit 0x105E
-draw str valid col green
-cmov nl
 
-draw str Testing^subtraction...^
-load A num 65535
-rsub A num 1
-comp reg A num 0
-jine lit 0x10F0
-draw str valid col green
-cmov nl
-
-draw str Testing^multiplication...^
+routine: entry
 load A num 1
-rmul A num 2
-comp reg A num 32768
-jine lit 0x118E
-draw str valid col green
-cmov nl
-
-draw str Testing^division...^
-load A num 10000
-rdiv A num 2
-comp reg A num 1
-jine lit 0x1214
-draw str valid col green
-cmov nl
-
-draw str Testing^jumping^to^subroutine...^
-jusr lit 0xFF00
-draw str valid col green
-cmov nl
-draw str Testing^returning^from^subroutine...^
-rtor
-draw str valid col green
-cmov nl
-
+stor A lit 0xF0AC
 halt
+end
+
+routine: routine1
+halt
+end
+
+routine: routine2
+load X lit 0xE621
+end
