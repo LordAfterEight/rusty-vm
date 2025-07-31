@@ -1,3 +1,5 @@
+## NOTE: The current versions of RvmASM and its assembler are deprecated and being rewritten. The goal is to have a better structured version of RvmASM that supports routines (callable program blocks). This documentation will be updated once the new version of RvmASM is in a working state and compatible with [Rusty-VM](https://github.com/LordAfterEight/rusty-vm/blob/master/README.md)
+
 # RvmASM Assembler
 This is the assembler for ```.rvmasm``` files. It will parse any file of that type and convert it into a text file with binary content for [Rusty-VM](https://github.com/LordAfterEight/rusty-vm/blob/master/README.md) to read. to use it, first run the following command:
 ```shell
