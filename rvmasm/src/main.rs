@@ -83,7 +83,7 @@ fn main() {
         memory[0x0300 + i] = opcodes::GPU_NO_OPERAT;
     }
 
-    let mut instr_ptr: usize = 0x1000;
+    let mut instr_ptr: usize = 0x1002;
     let mut gpu_ptr: usize = 0x0300;
 
     let mut regs = vec![0, 0, 0];
@@ -94,13 +94,15 @@ fn main() {
     let mut define_mode = false;
     let mut routine_ptr = 0;
     let mut routines = Vec::<Routine>::new();
+    let mut routine_addresses = Vec::<u16>::new();
+    let mut routine_addresses_ptr = 0;
 
     for line in code_string.lines() {
         let instruction: Vec<&str> = line.split(' ').collect();
         match define_mode {
             true => {
-                let routine = &mut routines[routine_ptr];
-                print!("{}: ", routine.name);
+                routines[routine_ptr].address = instr_ptr as u16;
+                print!("{}: ", routines[routine_ptr].name);
                 match instruction[0] {
                     "load" => {
                         let register = parse_regs(&instruction, code_line, 1);
@@ -112,34 +114,49 @@ fn main() {
                         };
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
                         println!("Load value {} into {} register", value, char::from(register as u8));
-                        routine.instructions.push(instr);
-                        routine.instructions.push(value);
+                        routines[routine_ptr].instructions.push(instr);
+                        routines[routine_ptr].instructions.push(value);
                     }
                     "stor" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let instr = match register {
                             0x0041 => opcodes::STOR_AREG,
-                            0x0058 => opcodes::LOAD_XREG,
+                            0x0058 => opcodes::STOR_XREG,
                             0x0059 => opcodes::STOR_YREG,
                             _ => 0
                         };
                         let addr = parse_hex_lit_num(&instruction, code_line, 2, 0);
                         println!("Store {} register to {:#06X}", char::from(register as u8), addr);
-                        routine.instructions.push(instr);
-                        routine.instructions.push(addr);
+                        routines[routine_ptr].instructions.push(instr);
+                        routines[routine_ptr].instructions.push(addr);
+                    }
+                    "jusr" => {
+                        let subroutine_name = instruction [1];
+                        let new_address = return_routine_address(subroutine_name, &mut routines);
+                        routines[routine_ptr].instructions.push(opcodes::JMP_TO_SR);
+                        routines[routine_ptr].instructions.push(new_address.clone());
+                    }
+                    "rtor" => {
+                        routines[routine_ptr].instructions.push(opcodes::RET_TO_OR);
                     }
                     "halt" => {
-                        routine.instructions.push(opcodes::HALT_LOOP);
+                        routines[routine_ptr].instructions.push(opcodes::HALT_LOOP);
                         println!("Halt");
                     }
                     "end" => {
-                        routine.length = routine.instructions.len() as u16;
-                        println!("Has length of {}", routine.length);
-                        for instr in 0..routine.instructions.len() {
-                            println!("Instruction {}: {:#06X}", instr + 1, routine.instructions[instr]);
+                        routines[routine_ptr].length = routines[routine_ptr].instructions.len() as u16;
+                        println!("Has length of {}", routines[routine_ptr].length);
+                        for instr in 0..routines[routine_ptr].instructions.len() {
+                            println!("Instruction {}: {:#06X}", instr + 1, routines[routine_ptr].instructions[instr]);
                         }
+                        routine_addresses.push(routines[routine_ptr].address);
+                        instr_ptr += routines[routine_ptr].length as usize + 1;
+                        println!("Instruction pointer: {:#06X}", instr_ptr);
                         define_mode = false;
-                        routine_ptr += 1;
+                        if routines[routine_ptr].name != "entry" {
+                            routine_addresses_ptr += 1;
+                            routine_ptr += 1;
+                        }
                         continue;
                     }
                     "   " | "" | "//" => {}
@@ -151,7 +168,7 @@ fn main() {
                     "routine:" => {
                         define_mode = true;
                         routines.push(Routine::new(instruction[1].to_string(), instr_ptr as u16));
-                        println!("\nBuilding routine \"{}\"", routines[routine_ptr].name);
+                        println!("\n{} \"{}\" at {}", "Building routine".green(), routines[routine_ptr].name.cyan(), format!("{:#06X}", instr_ptr).yellow());
                     },
                     "//" | "" | "   " => {
                         code_line += 1;
@@ -165,22 +182,48 @@ fn main() {
     }
 
     let mut addr_used = 0;
+    routine_addresses_ptr = 0;
+    instr_ptr = 0x1000;
+
+    println!();
+
+    memory[0x1000] = opcodes::JMP_TO_SR;
+    memory[0x1001] = routine_addresses[routine_addresses.len() - 1];
+    instr_ptr += 2;
+
+    for mut routine in routines {
+        println!("\nRoutine: {}", routine.name);
+        for instruction in &routine.instructions {
+            println!("Address: {:#06X}", instr_ptr + routine.offset_ptr);
+            memory[instr_ptr + routine.offset_ptr] = *instruction;
+            routine.offset_ptr += 1;
+        }
+        instr_ptr += routine.length as usize + 1;
+        routine_addresses_ptr += 1;
+    }
 
     // NOTE: WRITE MEMORY TO FILE
     for line in memory.iter() {
-        // TODO: Write to file in binary format instead of bytes
-        // -> This would reduce the file size by 1/8th or 1/9th (if \n not needed too)
-        // Would need to use << operators to encode bits into a &mut [u8] file buffer
         _ = img_file.write_all(format!("{:016b}\n", line).as_bytes());
-        if *line != 0x0000 {
+        if (*line != 0x0000) && (*line != 0xA000) {
             addr_used += 1;
         }
     }
     println!(
         "Program uses {} addresses and ~{:.2}% of the ROM",
-        addr_used - 512,
-        ((addr_used - 512) as f32 / 65536.0) * 100.0
+        addr_used,
+        (addr_used as f32 / 65536.0) * 100.0
     );
+}
+
+fn return_routine_address(routine_name: &str, routines: &Vec<Routine>) -> u16 {
+    let mut return_address = 0;
+    for routine in routines.iter() {
+        if routine_name == routine.name {
+            return_address = routine.address;
+        }
+    }
+    return return_address
 }
 
 fn parse_regs(instruction: &Vec<&str>, code_line: usize, arg_pos: usize) -> u16 {
@@ -231,6 +274,7 @@ fn parse_hex_lit_num(instruction: &Vec<&str>, code_line: usize, arg_pos: usize, 
     return return_value;
 }
 
+#[derive(Clone)]
 pub struct Routine {
     pub name: String,
     pub address: u16,

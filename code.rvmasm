@@ -1,15 +1,15 @@
-// Program starts at 0x1000
-
-routine: entry
-load A num 1
-stor A lit 0xF0AC
-halt
-end
-
 routine: routine1
-halt
+stor A lit 0xFF00
+rtor
 end
 
 routine: routine2
-load X lit 0xE621
+load A lit 0xE621
+rtor
+end
+
+routine: entry
+jusr routine2
+jusr routine1
+halt
 end
