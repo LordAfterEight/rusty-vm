@@ -1,3 +1,5 @@
+## NOTE: The current versions of RvmASM and its assembler are deprecated and being rewritten. The goal is to have a better structured version of RvmASM that supports routines (callable program blocks). This documentation will be updated once the new version of RvmASM is in a working state and compatible with [Rusty-VM](https://github.com/LordAfterEight/rusty-vm/blob/master/README.md)
+
 # Rusty-VM
 Rusty-VM is a 16-bit virtual machine with completely made up hardware, architecture, instructions, you name it. It has its own Assembly-ish language called RvmASM and comes with an assembler that takes .rvmasm files
 and turns them into a memory file with binary content for the VM to read and write to. The goal is to have a fully functional 16-bit virtual machine that can run any program or even OS made for it using RvmASM.
