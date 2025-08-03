@@ -1,0 +1,10 @@
+[package]
+name = "gpu"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+colored = "3.0.0"
+crossterm = "0.29.0"
+macroquad = "0.4.14"
+nix = { version = "0.30.1", features = ["process", "signal"] }
