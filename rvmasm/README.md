@@ -71,7 +71,8 @@ end      # All that's needed to end the routine definition
 ```ruby
 lit 0x0FA3
 lit 0FA3
-# Those two are the same
+lit FA3
+# These are all the same
 ```
 </details>
 
@@ -79,10 +80,10 @@ lit 0FA3
 <details open>
   <Summary> Explanation </Summary>
   
-```hex``` will convert the following value into its hexadecimal representation. Examples:
+```hex``` Interprets the following value as **character**, converting it to its numerical ASCII representation. Examples:
 ```ruby
 load A hex U        # "U" will be converted to 0x0055 and loaded into Register A
-load A lit 0x0055   # same as above (without the conversion obviously)
+load A lit 0x0055   # Same value
 ```
 </details>
 
@@ -92,8 +93,8 @@ load A lit 0x0055   # same as above (without the conversion obviously)
   
 ```num``` enables you to use any decimal number from 0 to 65535. Examples:
 ```ruby
-load A num 7        # number 7 will be loaded into the A register. Would be the same as "lit 0x0007"
-load X num 65535    # number 65535 will be loaded into the X register. Would be the same as "lit 0xFFFF"
+load A num 7        # Number 7 will be loaded into the A register. Would be the same as "lit 0x0007"
+load X num 65535    # Number 65535 will be loaded into the X register. Would be the same as "lit 0xFFFF"
 ```
 </details>
 
