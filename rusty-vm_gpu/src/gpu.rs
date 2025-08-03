@@ -176,7 +176,6 @@ impl GPU {
         img.read_at(&mut buffer, self.buf_ptr as u64 * 16).unwrap();
 
         let instruction = u16::from_be_bytes(buffer);
-        println!("Read {:#06X} at {:#06X}", instruction, self.buf_ptr as u64 * 16);
 
         // --- Handle GPU Instructions ---
         if self.draw_mode == true {
