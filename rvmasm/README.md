@@ -1,5 +1,3 @@
-## NOTE: The current versions of RvmASM and its assembler are deprecated and being rewritten. The goal is to have a better structured version of RvmASM that supports routines (callable program blocks). This documentation will be updated once the new version of RvmASM is in a working state and compatible with [Rusty-VM](https://github.com/LordAfterEight/rusty-vm/blob/master/README.md)
-
 # RvmASM Assembler
 This is the assembler for ```.rvmasm``` files. It will parse any file of that type and convert it into a text file with binary content for [Rusty-VM](https://github.com/LordAfterEight/rusty-vm/blob/master/README.md) to read. to use it, first run the following command:
 ```shell
@@ -14,14 +12,19 @@ rvmasm code.rvmasm output
 RvmASM is an Assembly-ish language for my 16-bit virtual machine Rusty-VM. I made this assembly language and its parser to allow me and maybe even others to easily create programs for the virtual machine without needing to write raw binary values into a file. It is currently under development, just like the virtual machine itself, so both are far from being finished. Under this paragraph you will find a documentation of the entire language. This documentation will constantly change as more features and content are added to the language.
 
 # Table of Contents
+
 ### 1. [Keywords](#Keywords)
+   - [routine:](#routine)
+   - [end](#end)
    - [lit](#lit)
    - [hex](#hex)
    - [num](#num)
    - [str](#str)
    - [col](#col)
+
+### 2. [Routines](#Routines)
    
-### 2. [Instructions](#Instructions)
+### 3. [Instructions](#Instructions)
 
 
 | Jump | Register | Arithmetics | Miscellaneous |
@@ -29,14 +32,36 @@ RvmASM is an Assembly-ish language for my 16-bit virtual machine Rusty-VM. I mad
 |[jump](#jump)|[load](#load)|[comp](#comp)|[noop](#noop)|
 |[jusr](#jusr)|[stor](#stor)|[radd](#radd)|[setv](#setv)|
 |[juie](#juie)|             |[rsub](#rsub)|
-|[jine](#jine)|             |[rmul](#rmul)|
+|[juin](#juin)|             |[rmul](#rmul)|
 |[rtor](#rtor)|             |[rdiv](#rdiv)|
+
 
 
 ## Keywords <a name="Keywords"></a>
 These are used to determine what type the following value will be converted to.
-There are five keywords: ```lit```, ```hex```, ```num```, ```str``` and ```col```:
+There are seven keywords: ```routine:```, ```end```, ```lit```, ```hex```, ```num```, ```str``` and ```col```.
 
+### ```routine:``` <a name="routine"></a>
+<details open>
+  <Summary> Explanation </Summary>
+  
+```routine:``` starts the definition of a routine. Example:
+```ruby
+routine: routine1       # Creates a routine with the name routine1
+...
+```
+</details>
+
+### ```end``` <a name="end"></a>
+<details open>
+  <Summary> Explanation </Summary>
+  
+```end``` is used to mark the end of the routine. Example:
+```ruby
+...
+end      # All that's needed to end the routine definition
+```
+</details>
 
 ### ```lit``` <a name="lit"></a>
 <details open>
@@ -90,6 +115,37 @@ draw str Hello^World!  # Will print "Hello World!" to the screen
 ```ruby
 draw str Hello^World! col red  # Will print a red "Hello World!" to the screen
 ```
+</details>
+
+## Routines <a name="Routines"></a>
+```routine: <RoutineName>``` is used to create a routine. Every line below a ```routine: <RoutineName>``` will be part of that routine, until the keyword ```end``` is encountered. ```end```, as the name implies, marks the end of the routine.
+All routines that are not the ```entry``` routine **must** be defined _before_ the ```entry``` routine is defined, so they're known to the assembler. This example program loads the A register with the value 1 and then runs a loop that
+increments the value in the A register by 1 for every iteration until it reaches 10000, returns and halts the CPU:
+```ruby
+routine: loop
+radd A num 1
+comp reg A num 10000
+juin loop      # Jump to routine "loop" if the value in register A isn't equal to 10000
+rtor           # Will be reached when the value in register A is equal to 10000
+end
+
+routine: entry
+load A num 1
+jusr loop      # Jump to routine called "loop"
+halt           # Routine "loop" returns here when it encounters the "rtor" instruction
+end
+```
+
+<details>
+  <Summary> Detailed explanation </Summary>
+
+  1. In "entry": Loads the A register with the value 1
+  2. In "entry": Jumps to a routine called "loop"
+  3. In "loop": Add 1 to the value in the A register
+  4. In "loop": Compare the value in the A register to 10000, set the eq_flag if true
+  5. In "loop": If the eq_flag is **not** set, jump to a routine called "loop" (itself here), otherwise continue
+  6. In "loop": "Return to origin" instruction returns to where the program came from, moving on from there
+  7. In "entry": Send the CPU into the halt loop, stopping execution
 </details>
 
 #
@@ -153,14 +209,14 @@ juie num 22266     # You can also use a number directly
 ```
 </details>
 
-### ```jine``` <a name="jine"></a>
+### ```juin``` <a name="juin"></a>
 <details open>
   <Summary> Explanation </Summary>
   
-```jine``` is used just like ```jump``` with the slight difference that it only jumps to the specified address if the CPU's eq_flag is **NOT** set. Examples:
+```juin``` is used just like ```jump``` with the slight difference that it only jumps to the specified address if the CPU's eq_flag is **NOT** set. Examples:
 ```ruby
-jine lit 0x56FA    # Jumps to the address 0x56FA (the 22266th address) in the memory if the eq_flag is NOT set
-jine num 22266     # You can also use a number directly
+juin lit 0x56FA    # Jumps to the address 0x56FA (the 22266th address) in the memory if the eq_flag is NOT set
+juin num 22266     # You can also use a number directly
 ```
 </details>
 
