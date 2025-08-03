@@ -1,5 +1,3 @@
-## NOTE: The assembler now properly supports creating subroutines and calling them. But as of now most of the instructions are not yet reimplemented.
-
 # Rusty-VM
 Rusty-VM is a 16-bit virtual machine with completely made up hardware, architecture, instructions, you name it. It has its own Assembly-ish language called RvmASM and comes with an assembler that takes .rvmasm files
 and turns them into a memory file with binary content for the VM to read and write to. The goal is to have a fully functional 16-bit virtual machine that can run any program or even OS made for it using RvmASM.
