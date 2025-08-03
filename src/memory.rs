@@ -1,11 +1,12 @@
 use std::fs::OpenOptions;
 use std::io::{Read, Seek, SeekFrom, Write};
+use std::os::unix::fs::FileExt;
 
 use crate::opcodes;
 
 #[derive(Debug)]
 pub struct Memory {
-    pub rom: [u16; 65536],
+    pub rom: Vec<u16>,
     pub ram: [u16; 1024],
 }
 
@@ -14,22 +15,17 @@ impl Memory {
     pub fn init() -> Self {
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/ROM.bin", env!("CARGO_MANIFEST_DIR")))
             .unwrap();
 
         let mut file = img;
-        let mut buffer = &mut String::new();
-        _ = file.read_to_string(&mut buffer);
+        let mut buffer = Vec::new();
+        _ = file.read_to_end(&mut buffer).unwrap();
 
-        let mut rom = [0; 65536];
-        let mut counter = 0;
+        let rom = buffer.chunks_exact(2)
+            .map(|chunk| u16::from_be_bytes([chunk[0], chunk[1]]))
+            .collect();
 
-        _ = buffer.trim_start();
-
-        for line in buffer.lines() {
-            rom[counter] = u16::from_str_radix(line, 2).unwrap();
-            counter += 1;
-        }
 
         Self {
             rom,
@@ -40,11 +36,10 @@ impl Memory {
     pub fn update(&mut self, instr_ptr: u16) {
         let img = OpenOptions::new()
             .write(true)
-            .open(format!("{}/ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/ROM.bin", env!("CARGO_MANIFEST_DIR")))
             .unwrap();
 
-        let mut file = img;
-        _ = file.seek(SeekFrom::Start(instr_ptr as u64 * 17)).unwrap();
-        _ = file.write_all(format!("{:016b}\n", self.rom[instr_ptr as usize]).as_bytes());
+        let file = img;
+        _ = file.write_at(&self.rom[instr_ptr as usize].to_be_bytes(), instr_ptr as u64 * 16);
     }
 }

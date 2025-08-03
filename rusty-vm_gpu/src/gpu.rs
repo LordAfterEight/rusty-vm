@@ -1,5 +1,5 @@
 use crate::opcodes;
-use std::fs::OpenOptions;
+use std::{fs::OpenOptions, os::unix::fs::FileExt};
 use std::io::Read;
 
 use std::process::Command;
@@ -17,7 +17,7 @@ const FONT_SIZE: f32 = 16.0;
 #[derive(Debug)]
 pub struct GPU {
     pub buf_ptr: u16,
-    pub memory: String,
+    pub memory: Vec<u16>,
     pub frame_buffer: [[Character; 48]; 92],
     pub cursor: Cursor,
     pub cursor_visible: bool,
@@ -33,24 +33,29 @@ pub struct GPU {
 impl GPU {
     pub fn init() -> Self {
         #[cfg(not(target_os = "windows"))]
-        let img = OpenOptions::new()
+        let mut img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/../ROM.bin", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         #[cfg(target_os = "windows")]
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}\\..\\ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}\\..\\ROM.bin", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
-        let mut file = img;
-        let mut buffer = &mut String::new();
-        _ = file.read_to_string(&mut buffer);
+        let mut buffer = Vec::new();
+        let memory;
+
+        img.read_to_end(&mut buffer).unwrap();
+
+        memory = buffer.chunks_exact(2)
+            .map(|chunk| u16::from_be_bytes([chunk[0], chunk[1]]))
+            .collect();
 
         Self {
             buf_ptr: 0x0300, // 0x0300 - 0x0FFF => 768 - 4096, so 3328 16-bit addresses
-            memory: buffer.to_string(),
+            memory,
             frame_buffer: [[Character::new(' '); 48]; 92],
             cursor: Cursor::new(CursorShapes::Block),
             cursor_visible: false,
@@ -155,164 +160,144 @@ impl GPU {
         }
 
         #[cfg(not(target_os = "windows"))]
-        let img = OpenOptions::new()
+        let mut img = OpenOptions::new()
             .read(true)
-            .open(format!("{}/../ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}/../ROM.bin", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
         #[cfg(target_os = "windows")]
         let img = OpenOptions::new()
             .read(true)
-            .open(format!("{}\\..\\ROM", env!("CARGO_MANIFEST_DIR")))
+            .open(format!("{}\\..\\ROM.bin", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
 
-        let mut file = img;
-        let mut buffer = &mut String::new();
-        _ = file.read_to_string(&mut buffer);
+        let mut buffer = [0u8; 2];
 
-        self.memory = buffer.to_string();
+        img.read_at(&mut buffer, self.buf_ptr as u64 * 16).unwrap();
 
-        if self.memory.lines().nth(self.buf_ptr as usize).is_some() {
-            let instruction_string = self
-                .memory
-                .lines()
-                .nth(self.buf_ptr as usize)
-                .unwrap()
-                .to_string();
+        let instruction = u16::from_be_bytes(buffer);
+        println!("Read {:#06X} at {:#06X}", instruction, self.buf_ptr as u64 * 16);
 
-            let trimmed = instruction_string.trim_start_matches("");
-
-            let instruction = u16::from_str_radix(trimmed, 2).unwrap();
-
-            /*
+        // --- Handle GPU Instructions ---
+        if self.draw_mode == true {
             #[cfg(debug_assertions)]
             crate::debug!(
-                format!("Address: {:#06X}", self.buf_ptr),
-                format!("Instruction: {:#06X}", instruction)
+                "Appending letter to framebuffer: ",
+                crate::hex!(instruction)
             );
-            */
 
-            // --- Handle GPU Instructions ---
-            if self.draw_mode == true {
-                #[cfg(debug_assertions)]
-                crate::debug!(
-                    "Appending letter to framebuffer: ",
-                    crate::hex!(instruction)
-                );
+            let instr = instruction as u8;
 
-                let instr = instruction as u8;
+            if self.int_flag {
 
-                if self.int_flag {
+            }
 
+            // --- Handle chars ---
+            match char::from(instr) {
+                '`' => {
+                    #[cfg(debug_assertions)]
+                    crate::debug!("Detected escape character: Exiting draw mode");
+                    self.draw_mode = false;
+                    self.increase_buf_ptr();
                 }
+                _ => match instruction {
+                    0xA000 => {},
+                    0x00..=0xFF7A => {
+                        let mut char = Character::new(char::from(instruction as u8));
 
-                // --- Handle chars ---
-                match char::from(instr) {
-                    '`' => {
+                        let color_byte = (instruction >> 8) as u8;
+                        let char_byte = (instruction & 0xFF) as u8;
+
                         #[cfg(debug_assertions)]
-                        crate::debug!("Detected escape character: Exiting draw mode");
-                        self.draw_mode = false;
-                        self.increase_buf_ptr();
-                    }
-                    _ => match instruction {
-                        0xA000 => {},
-                        0x00..=0xFF7A => {
-                            let mut char = Character::new(char::from(instruction as u8));
+                        crate::debug!(
+                            format!("Color Byte: {:#04X}", color_byte),
+                            format!("Character Byte: {:#04X}", char_byte)
+                        );
 
-                            let color_byte = (instruction >> 8) as u8;
-                            let char_byte = (instruction & 0xFF) as u8;
+                        match CharColors::from_u8(color_byte).unwrap() {
+                            CharColors::White => char.color = macroquad::color::WHITE,
+                            CharColors::Red => char.color = macroquad::color::RED,
+                            CharColors::Green => char.color = macroquad::color::GREEN,
+                            CharColors::Blue => char.color = macroquad::color::BLUE,
+                            CharColors::Cyan => char.color = macroquad::color::Color::new(0.5,0.9,1.0,1.0),
+                            CharColors::Magenta => char.color = macroquad::color::MAGENTA,
+                        }
 
-                            #[cfg(debug_assertions)]
-                            crate::debug!(
-                                format!("Color Byte: {:#04X}", color_byte),
-                                format!("Character Byte: {:#04X}", char_byte)
-                            );
-
-                            match CharColors::from_u8(color_byte).unwrap() {
-                                CharColors::White => char.color = macroquad::color::WHITE,
-                                CharColors::Red => char.color = macroquad::color::RED,
-                                CharColors::Green => char.color = macroquad::color::GREEN,
-                                CharColors::Blue => char.color = macroquad::color::BLUE,
-                                CharColors::Cyan => char.color = macroquad::color::Color::new(0.5,0.9,1.0,1.0),
-                                CharColors::Magenta => char.color = macroquad::color::MAGENTA,
-                            }
-
-                            self.frame_buffer[self.cursor.position.0][self.cursor.position.1] = char;
-                            if self.cursor.position.0 < 91 {
-                                self.cursor.position.0 += 1;
+                        self.frame_buffer[self.cursor.position.0][self.cursor.position.1] = char;
+                        if self.cursor.position.0 < 91 {
+                            self.cursor.position.0 += 1;
+                        } else {
+                            self.cursor.position.0 = 0;
+                            if self.cursor.position.1 < 48 {
+                                self.cursor.position.1 += 1;
                             } else {
-                                self.cursor.position.0 = 0;
-                                if self.cursor.position.1 < 48 {
-                                    self.cursor.position.1 += 1;
-                                } else {
-                                    self.cursor.position.1 = 0;
-                                }
-                            }
-                            self.increase_buf_ptr();
-                        }
-                        _ => {}
-                    },
-                }
-            } else {
-                match instruction {
-                    opcodes::GPU_NO_OPERAT => {
-                        /*
-                        #[cfg(debug_assertions)]
-                        crate::debug!("NoOp");
-                        */
-                    }
-                    opcodes::GPU_DRAW_LETT => {
-                        #[cfg(debug_assertions)]
-                        crate::debug!("Entering draw mode");
-                        self.increase_buf_ptr();
-                        self.draw_mode = true;
-                    }
-                    opcodes::GPU_DRAW_VALU => {
-                        #[cfg(debug_assertions)]
-                        crate::debug!("Entering draw mode");
-                        self.increase_buf_ptr();
-                        self.draw_mode = true;
-                        self.int_flag = true;
-                    }
-                    opcodes::GPU_RESET_PTR => {
-                        #[cfg(debug_assertions)]
-                        crate::debug!("Resetting buffer pointer");
-                        self.buf_ptr = 0x0300;
-                    }
-                    opcodes::GPU_UPDATE => {
-                        #[cfg(debug_assertions)]
-                        crate::debug!("Redrawing the screen");
-                        // --- Render FrameBuffer ---
-                        self.draw_framebuffer().await;
-                        self.increase_buf_ptr();
-                    }
-                    opcodes::GPU_RES_F_BUF => {
-                        #[cfg(debug_assertions)]
-                        crate::debug!("Clearing frame buffer");
-                        for y in 0..48 {
-                            for x in 0..91 {
-                                self.frame_buffer[x][y].literal = ' ';
-                                self.frame_buffer[x][y].color = macroquad::color::BLACK;
+                                self.cursor.position.1 = 0;
                             }
                         }
-                        self.cursor.position = (0,0);
-                        self.increase_buf_ptr();
-                    }
-                    opcodes::GPU_MV_C_DOWN => {
-                        #[cfg(debug_assertions)]
-                        crate::debug!("Moving cursor down");
-                        self.cursor.position.1 += 1;
-                        self.increase_buf_ptr();
-                    }
-                    opcodes::GPU_NEW_LINE => {
-                        #[cfg(debug_assertions)]
-                        crate::debug!("Inserting new line");
-                        self.cursor.position.1 += 1;
-                        self.cursor.position.0 = 0;
                         self.increase_buf_ptr();
                     }
                     _ => {}
+                },
+            }
+        } else {
+            match instruction {
+                opcodes::GPU_NO_OPERAT => {
+                    /*
+                    #[cfg(debug_assertions)]
+                    crate::debug!("NoOp");
+                    */
                 }
+                opcodes::GPU_DRAW_LETT => {
+                    #[cfg(debug_assertions)]
+                    crate::debug!("Entering draw mode");
+                    self.increase_buf_ptr();
+                    self.draw_mode = true;
+                }
+                opcodes::GPU_DRAW_VALU => {
+                    #[cfg(debug_assertions)]
+                    crate::debug!("Entering draw mode");
+                    self.increase_buf_ptr();
+                    self.draw_mode = true;
+                    self.int_flag = true;
+                }
+                opcodes::GPU_RESET_PTR => {
+                    #[cfg(debug_assertions)]
+                    crate::debug!("Resetting buffer pointer");
+                    self.buf_ptr = 0x0300;
+                }
+                opcodes::GPU_UPDATE => {
+                    #[cfg(debug_assertions)]
+                    crate::debug!("Redrawing the screen");
+                    // --- Render FrameBuffer ---
+                    self.draw_framebuffer().await;
+                    self.increase_buf_ptr();
+                }
+                opcodes::GPU_RES_F_BUF => {
+                    #[cfg(debug_assertions)]
+                    crate::debug!("Clearing frame buffer");
+                    for y in 0..48 {
+                        for x in 0..91 {
+                            self.frame_buffer[x][y].literal = ' ';
+                            self.frame_buffer[x][y].color = macroquad::color::BLACK;
+                        }
+                    }
+                    self.cursor.position = (0,0);
+                    self.increase_buf_ptr();
+                }
+                opcodes::GPU_MV_C_DOWN => {
+                    #[cfg(debug_assertions)]
+                    crate::debug!("Moving cursor down");
+                    self.cursor.position.1 += 1;
+                    self.increase_buf_ptr();
+                }
+                opcodes::GPU_NEW_LINE => {
+                    #[cfg(debug_assertions)]
+                    crate::debug!("Inserting new line");
+                    self.cursor.position.1 += 1;
+                    self.cursor.position.0 = 0;
+                    self.increase_buf_ptr();
+                }
+                _ => {}
             }
         }
         std::thread::sleep(std::time::Duration::from_micros(

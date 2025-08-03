@@ -134,6 +134,7 @@ fn main() {
                     "draw" => {
                         match instruction[1] {
                             "str" => {
+                                println!("Print \"{}\" to the screen", instruction[2]);
                                 let mut color_byte = 0x0A;
                                 match instruction[3] {
                                     "col" => {
@@ -183,6 +184,7 @@ fn main() {
                         }
                     }
                     "cmov" => {
+                        println!("Moving cursor: {}", instruction[1]);
                         let mut instr = 0xA000;
                         match instruction[1] {
                             "up" => instr = opcodes::GPU_MV_C_UP,
@@ -206,6 +208,7 @@ fn main() {
                     "radd" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                        println!("Adding value {} to register {}", value, char::from(register as u8));
                         routines[routine_ptr].instructions.push(opcodes::INC_REG_V);
                         routines[routine_ptr].instructions.push(register);
                         routines[routine_ptr].instructions.push(value);
@@ -213,6 +216,7 @@ fn main() {
                     "rsub" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                        println!("Subtracting value {} from register {}", value, char::from(register as u8));
                         routines[routine_ptr].instructions.push(opcodes::DEC_REG_V);
                         routines[routine_ptr].instructions.push(register);
                         routines[routine_ptr].instructions.push(value);
@@ -220,6 +224,7 @@ fn main() {
                     "rmul" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                        println!("Multiplying {} register value by {}", char::from(register as u8), value);
                         routines[routine_ptr].instructions.push(opcodes::MUL_REG_V);
                         routines[routine_ptr].instructions.push(register);
                         routines[routine_ptr].instructions.push(value);
@@ -227,6 +232,7 @@ fn main() {
                     "rdiv" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                        println!("Dividing {} register value by {}", char::from(register as u8), value);
                         routines[routine_ptr].instructions.push(opcodes::DIV_REG_V);
                         routines[routine_ptr].instructions.push(register);
                         routines[routine_ptr].instructions.push(value);
@@ -234,24 +240,28 @@ fn main() {
                     "jusr" => {
                         let subroutine_name = instruction [1];
                         let new_address = return_routine_address(subroutine_name, &mut routines);
+                        println!("Jump to routine at {:#06X}", new_address);
                         routines[routine_ptr].instructions.push(opcodes::JMP_TO_SR);
                         routines[routine_ptr].instructions.push(new_address);
                     }
                     "jump" => {
                         let subroutine_name = instruction [1];
                         let new_address = return_routine_address(subroutine_name, &mut routines);
+                        println!("Jump to {:#06X}", new_address);
                         routines[routine_ptr].instructions.push(opcodes::JMP_TO_AD);
                         routines[routine_ptr].instructions.push(new_address);
                     }
                     "juie" => {
                         let subroutine_name = instruction [1];
                         let new_address = return_routine_address(subroutine_name, &mut routines);
+                        println!("Jump to {:#06X} if eq_flag is set", new_address);
                         routines[routine_ptr].instructions.push(opcodes::JUMP_IFEQ);
                         routines[routine_ptr].instructions.push(new_address);
                     }
                     "juin" => {
                         let subroutine_name = instruction [1];
                         let new_address = return_routine_address(subroutine_name, &mut routines);
+                        println!("Jump to {:#06X} if eq_flag is not set", new_address);
                         routines[routine_ptr].instructions.push(opcodes::JUMP_INEQ);
                         routines[routine_ptr].instructions.push(new_address);
                     }
@@ -260,20 +270,28 @@ fn main() {
                         let val_b;
                         if instruction[1] == "reg" {
                             val_a = parse_regs(&instruction, code_line, 2);
+                            print!("Comparing register {} ", char::from(val_a as u8));
                         } else {
                             val_a = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                            print!("Comparing value {} ", val_a);
                         }
+                        print!("with ");
                         if instruction[3] == "reg" {
                             val_b = parse_regs(&instruction, code_line, 4);
+                            print!("register {}\n", char::from(val_b as u8));
                         } else {
                             val_b = parse_hex_lit_num(&instruction, code_line, 3, 0);
+                            print!("value {}\n", val_b);
                         }
                         routines[routine_ptr].instructions.push(opcodes::COMP_REGS);
                         routines[routine_ptr].instructions.push(val_a);
                         routines[routine_ptr].instructions.push(val_b);
-                        eq_flag = true;
+                        if val_a == val_b {
+                            eq_flag = true;
+                        }
                     }
                     "rtor" => {
+                        println!("Returning to origin");
                         routines[routine_ptr].instructions.push(opcodes::RET_TO_OR);
                     }
                     "halt" => {
@@ -284,7 +302,7 @@ fn main() {
                         routines[routine_ptr].length = routines[routine_ptr].instructions.len() as u16;
                         println!("Has length of {}", routines[routine_ptr].length);
                         for instr in 0..routines[routine_ptr].instructions.len() {
-                            println!("Instruction {}: {:#06X}", instr + 1, routines[routine_ptr].instructions[instr]);
+                            //println!("Instruction {}: {:#06X}", instr + 1, routines[routine_ptr].instructions[instr]);
                         }
                         routine_addresses.push(routines[routine_ptr].address);
                         instr_ptr += routines[routine_ptr].length as usize + 1;
@@ -339,7 +357,7 @@ fn main() {
 
     // NOTE: WRITE MEMORY TO FILE
     for line in memory.iter() {
-        _ = img_file.write_all(format!("{:016b}\n", line).as_bytes());
+        _ = img_file.write_all(&line.to_be_bytes());
         if (*line != 0x0000) && (*line != 0xA000) {
             addr_used += 1;
         }
