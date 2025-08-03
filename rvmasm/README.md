@@ -38,7 +38,7 @@ RvmASM is an Assembly-ish language for my 16-bit virtual machine Rusty-VM. I mad
 
 
 ## Keywords <a name="Keywords"></a>
-These are used to determine what type the following value will be converted to.
+These are used to determine how the following value will be interpreted.
 There are seven keywords: ```routine:```, ```end```, ```lit```, ```hex```, ```num```, ```str``` and ```col```.
 
 ### ```routine:``` <a name="routine"></a>
