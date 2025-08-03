@@ -639,6 +639,7 @@ dependencies = [
  "clearscreen",
  "colored",
  "gpu",
+ "macroquad",
  "tokio",
 ]
 

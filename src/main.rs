@@ -40,13 +40,8 @@ async fn main() {
         }
     });
 
-    let gpu_task = tokio::spawn ( async {
-        gpu::main();
-    });
-
+    gpu::main();
     cpu_task.await.unwrap();
-    gpu_task.await.unwrap();
-
 }
 
 /// General purpose debug macro
