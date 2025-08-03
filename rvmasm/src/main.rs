@@ -307,7 +307,7 @@ fn main() {
                         routines.push(Routine::new(instruction[1].to_string(), instr_ptr as u16));
                         println!("\n{} \"{}\" at {}", "Building routine".green(), routines[routine_ptr].name.cyan(), format!("{:#06X}", instr_ptr).yellow());
                     },
-                    "//" | "" | "   " => {
+                    "#" | "" | "   " => {
                         code_line += 1;
                         continue;
                     },
