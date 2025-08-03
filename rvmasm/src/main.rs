@@ -4,6 +4,7 @@ use std::io::{Write, stdin};
 use std::{fs::OpenOptions, io::Read};
 
 // TODO:
+// FIXME: GPU buffer being in wrong position due to subroutine building order
 
 mod opcodes;
 
@@ -130,11 +131,147 @@ fn main() {
                         routines[routine_ptr].instructions.push(instr);
                         routines[routine_ptr].instructions.push(addr);
                     }
+                    "draw" => {
+                        match instruction[1] {
+                            "str" => {
+                                let mut color_byte = 0x0A;
+                                match instruction[3] {
+                                    "col" => {
+                                        color_byte = match instruction[4] {
+                                            "red" => 0x0B,
+                                            "green" => 0x0C,
+                                            "blue" => 0x0D,
+                                            "cyan" => 0x0E,
+                                            "magenta" => 0x0F,
+                                            "white" | _ => 0x0A
+                                        };
+                                    },
+                                    _ => {}
+                                }
+                                routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
+                                routines[routine_ptr].instructions.push(opcodes::GPU_DRAW_LETT);
+                                routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
+                                routines[routine_ptr].instructions.push(gpu_ptr as u16);
+                                gpu_ptr += 1;
+
+                                let string = instruction[2];
+
+                                for mut char_byte in string.chars() {
+                                    if char_byte == '^' {
+                                        char_byte = char::from(0x20);
+                                    }
+                                    let out_word = ((color_byte << 8) as u16) | (char_byte as u16);
+                                    routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
+                                    routines[routine_ptr].instructions.push(out_word);
+                                    routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
+                                    routines[routine_ptr].instructions.push(gpu_ptr as u16);
+                                    gpu_ptr += 1;
+                                }
+
+                                routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
+                                routines[routine_ptr].instructions.push(0x60);
+                                routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
+                                routines[routine_ptr].instructions.push(gpu_ptr as u16);
+
+                                routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
+                                routines[routine_ptr].instructions.push(opcodes::GPU_UPDATE);
+                                routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
+                                routines[routine_ptr].instructions.push(gpu_ptr as u16 + 1);
+                                gpu_ptr += 2;
+                            }
+                            _ => panic("", &instruction, code_line, 1)
+                        }
+                    }
+                    "cmov" => {
+                        let mut instr = 0xA000;
+                        match instruction[1] {
+                            "up" => instr = opcodes::GPU_MV_C_UP,
+                            "do" => instr = opcodes::GPU_MV_C_DOWN,
+                            "le" => instr = opcodes::GPU_MV_C_LEFT,
+                            "ri" => instr = opcodes::GPU_MV_C_RIGH,
+                            "nl" => instr = opcodes::GPU_NEW_LINE,
+                            _ => panic("Unknown direction", &instruction, code_line, 2),
+                        }
+                        routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
+                        routines[routine_ptr].instructions.push(instr);
+                        routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
+                        routines[routine_ptr].instructions.push(gpu_ptr as u16);
+
+                        routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
+                        routines[routine_ptr].instructions.push(opcodes::GPU_UPDATE);
+                        routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
+                        routines[routine_ptr].instructions.push(gpu_ptr as u16 + 1);
+                        gpu_ptr += 2;
+                    }
+                    "radd" => {
+                        let register = parse_regs(&instruction, code_line, 1);
+                        let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                        routines[routine_ptr].instructions.push(opcodes::INC_REG_V);
+                        routines[routine_ptr].instructions.push(register);
+                        routines[routine_ptr].instructions.push(value);
+                    }
+                    "rsub" => {
+                        let register = parse_regs(&instruction, code_line, 1);
+                        let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                        routines[routine_ptr].instructions.push(opcodes::DEC_REG_V);
+                        routines[routine_ptr].instructions.push(register);
+                        routines[routine_ptr].instructions.push(value);
+                    }
+                    "rmul" => {
+                        let register = parse_regs(&instruction, code_line, 1);
+                        let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                        routines[routine_ptr].instructions.push(opcodes::MUL_REG_V);
+                        routines[routine_ptr].instructions.push(register);
+                        routines[routine_ptr].instructions.push(value);
+                    }
+                    "rdiv" => {
+                        let register = parse_regs(&instruction, code_line, 1);
+                        let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                        routines[routine_ptr].instructions.push(opcodes::DIV_REG_V);
+                        routines[routine_ptr].instructions.push(register);
+                        routines[routine_ptr].instructions.push(value);
+                    }
                     "jusr" => {
                         let subroutine_name = instruction [1];
                         let new_address = return_routine_address(subroutine_name, &mut routines);
                         routines[routine_ptr].instructions.push(opcodes::JMP_TO_SR);
-                        routines[routine_ptr].instructions.push(new_address.clone());
+                        routines[routine_ptr].instructions.push(new_address);
+                    }
+                    "jump" => {
+                        let subroutine_name = instruction [1];
+                        let new_address = return_routine_address(subroutine_name, &mut routines);
+                        routines[routine_ptr].instructions.push(opcodes::JMP_TO_AD);
+                        routines[routine_ptr].instructions.push(new_address);
+                    }
+                    "juie" => {
+                        let subroutine_name = instruction [1];
+                        let new_address = return_routine_address(subroutine_name, &mut routines);
+                        routines[routine_ptr].instructions.push(opcodes::JUMP_IFEQ);
+                        routines[routine_ptr].instructions.push(new_address);
+                    }
+                    "juin" => {
+                        let subroutine_name = instruction [1];
+                        let new_address = return_routine_address(subroutine_name, &mut routines);
+                        routines[routine_ptr].instructions.push(opcodes::JUMP_INEQ);
+                        routines[routine_ptr].instructions.push(new_address);
+                    }
+                    "comp" => {
+                        let val_a;
+                        let val_b;
+                        if instruction[1] == "reg" {
+                            val_a = parse_regs(&instruction, code_line, 2);
+                        } else {
+                            val_a = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                        }
+                        if instruction[3] == "reg" {
+                            val_b = parse_regs(&instruction, code_line, 4);
+                        } else {
+                            val_b = parse_hex_lit_num(&instruction, code_line, 3, 0);
+                        }
+                        routines[routine_ptr].instructions.push(opcodes::COMP_REGS);
+                        routines[routine_ptr].instructions.push(val_a);
+                        routines[routine_ptr].instructions.push(val_b);
+                        eq_flag = true;
                     }
                     "rtor" => {
                         routines[routine_ptr].instructions.push(opcodes::RET_TO_OR);
@@ -192,9 +329,7 @@ fn main() {
     instr_ptr += 2;
 
     for mut routine in routines {
-        println!("\nRoutine: {}", routine.name);
         for instruction in &routine.instructions {
-            println!("Address: {:#06X}", instr_ptr + routine.offset_ptr);
             memory[instr_ptr + routine.offset_ptr] = *instruction;
             routine.offset_ptr += 1;
         }
