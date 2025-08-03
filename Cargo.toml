@@ -6,10 +6,12 @@ edition = "2024"
 [dependencies]
 colored = "3.0.0"
 clearscreen = "4.0.2"
+tokio = { version = "1.47.1", features = ["full"] }
+gpu = { version = "0.1.0", path = "gpu" }
 
 [workspace]
 members = [
-    "rusty-vm_gpu",
+    "gpu",
     "rvmasm",
 ]
 

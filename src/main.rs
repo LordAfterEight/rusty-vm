@@ -1,3 +1,5 @@
+use gpu;
+
 pub mod cpu;
 pub mod memory;
 pub mod opcodes;
@@ -15,25 +17,36 @@ pub const FONT_SIZE: f32 = 12.0;
 // 0x0250          | EMPTY CHAR (0x0020)
 // 0x0300 - 0x0FFF | GPU BUFFER (3328 16-bit / 6656B)
 
-fn main() {
+#[tokio::main]
+async fn main() {
     #[cfg(target_os = "windows")]
     println!("Sucks to be on windows");
 
-    let mut cpu = cpu::CPU::init();
-    //_ = clearscreen::clear();
 
-    loop {
-        if cpu.halt_flag == false {
-            println!();
-            //_ = clearscreen::clear();
-            #[cfg(debug_assertions)]
-            debug!(
-                "CPU instruction pointer: ",
-                format!("{:#06X}", cpu.instr_ptr)
-            );
-            cpu.update();
+    let cpu_task = tokio::spawn( async {
+        let mut cpu = cpu::CPU::init();
+
+        loop {
+            if cpu.halt_flag == false {
+                println!();
+                //_ = clearscreen::clear();
+                #[cfg(debug_assertions)]
+                debug!(
+                    "CPU instruction pointer: ",
+                    format!("{:#06X}", cpu.instr_ptr)
+                );
+                cpu.update();
+            }
         }
-    }
+    });
+
+    let gpu_task = tokio::spawn ( async {
+        gpu::main();
+    });
+
+    cpu_task.await.unwrap();
+    gpu_task.await.unwrap();
+
 }
 
 /// General purpose debug macro

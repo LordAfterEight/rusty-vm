@@ -26,39 +26,6 @@ pub struct CPU {
 
 impl CPU {
     pub fn init() -> Self {
-        #[cfg(all(debug_assertions, not(target_os = "windows")))]
-        let path = format!(
-            "{}/target/debug/rusty-vm_gpu",
-            env!("CARGO_MANIFEST_DIR")
-        );
-
-        #[cfg(all(not(debug_assertions), not(target_os = "windows")))]
-        let path = format!(
-            "{}/target/release/rusty-vm_gpu",
-            env!("CARGO_MANIFEST_DIR")
-        );
-
-        #[cfg(all(debug_assertions, target_os = "windows"))]
-        let path = format!(
-            "{}\\target\\debug\\rusty-vm_gpu.exe",
-            env!("CARGO_MANIFEST_DIR")
-        );
-
-        #[cfg(all(not(debug_assertions), target_os = "windows"))]
-        let path = format!(
-            "{}\\target\\release\\rusty-vm_gpu.exe",
-            env!("CARGO_MANIFEST_DIR")
-        );
-
-        #[cfg(not(target_os = "android"))] {
-            #[cfg(debug_assertions)]
-            crate::debug!("Getting external GPU process from: ", path);
-            #[cfg(target_os = "linux")]
-            Some(Command::new(path).arg(id().to_string()).spawn().unwrap());
-            #[cfg(target_os = "windows")]
-            Some(Command::new(path).spawn().unwrap());
-        }
-
         Self {
             name: String::from("OwO CPU"),
 
