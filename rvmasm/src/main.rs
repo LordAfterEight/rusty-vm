@@ -131,7 +131,7 @@ fn main() {
                             "str" => {
                                 println!("Print \"{}\" to the screen", instruction[2]);
                                 let mut color_byte = 0x0A;
-                                if instruction.len() > 2 {
+                                if instruction.len() > 3 {
                                     match instruction[3] {
                                         "col" => {
                                             color_byte = match instruction[4] {
