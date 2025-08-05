@@ -1,10 +1,9 @@
 use colored::Colorize;
-use std::{char, default};
-use std::io::{Write, stdin};
+use std::char;
+use std::io::Write;
 use std::{fs::OpenOptions, io::Read};
 
 // TODO:
-// FIXME: GPU buffer being in wrong position due to subroutine building order
 
 mod opcodes;
 
@@ -87,16 +86,12 @@ fn main() {
     let mut instr_ptr: usize = 0x1002;
     let mut gpu_ptr: usize = 0x0300;
 
-    let mut regs = vec![0, 0, 0];
-    let mut eq_flag = false;
-
     let mut code_line = 1;
 
     let mut define_mode = false;
     let mut routine_ptr = 0;
     let mut routines = Vec::<Routine>::new();
     let mut routine_addresses = Vec::<u16>::new();
-    let mut routine_addresses_ptr = 0;
 
     for line in code_string.lines() {
         let instruction: Vec<&str> = line.split(' ').collect();
@@ -136,18 +131,20 @@ fn main() {
                             "str" => {
                                 println!("Print \"{}\" to the screen", instruction[2]);
                                 let mut color_byte = 0x0A;
-                                match instruction[3] {
-                                    "col" => {
-                                        color_byte = match instruction[4] {
-                                            "red" => 0x0B,
-                                            "green" => 0x0C,
-                                            "blue" => 0x0D,
-                                            "cyan" => 0x0E,
-                                            "magenta" => 0x0F,
-                                            "white" | _ => 0x0A
-                                        };
-                                    },
-                                    _ => {}
+                                if instruction.len() > 2 {
+                                    match instruction[3] {
+                                        "col" => {
+                                            color_byte = match instruction[4] {
+                                                "red" => 0x0B,
+                                                "green" => 0x0C,
+                                                "blue" => 0x0D,
+                                                "cyan" => 0x0E,
+                                                "magenta" => 0x0F,
+                                                "white" | _ => 0x0A
+                                            };
+                                        },
+                                        _ => {}
+                                    }
                                 }
                                 routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
                                 routines[routine_ptr].instructions.push(opcodes::GPU_DRAW_LETT);
@@ -287,7 +284,6 @@ fn main() {
                         routines[routine_ptr].instructions.push(val_a);
                         routines[routine_ptr].instructions.push(val_b);
                         if val_a == val_b {
-                            eq_flag = true;
                         }
                     }
                     "rtor" => {
@@ -301,15 +297,11 @@ fn main() {
                     "end" => {
                         routines[routine_ptr].length = routines[routine_ptr].instructions.len() as u16;
                         println!("Has length of {}", routines[routine_ptr].length);
-                        for instr in 0..routines[routine_ptr].instructions.len() {
-                            //println!("Instruction {}: {:#06X}", instr + 1, routines[routine_ptr].instructions[instr]);
-                        }
                         routine_addresses.push(routines[routine_ptr].address);
                         instr_ptr += routines[routine_ptr].length as usize + 1;
                         println!("Instruction pointer: {:#06X}", instr_ptr);
                         define_mode = false;
                         if routines[routine_ptr].name != "entry" {
-                            routine_addresses_ptr += 1;
                             routine_ptr += 1;
                         }
                         continue;
@@ -337,7 +329,6 @@ fn main() {
     }
 
     let mut addr_used = 0;
-    routine_addresses_ptr = 0;
     instr_ptr = 0x1000;
 
     println!();
@@ -352,7 +343,6 @@ fn main() {
             routine.offset_ptr += 1;
         }
         instr_ptr += routine.length as usize + 1;
-        routine_addresses_ptr += 1;
     }
 
     // NOTE: WRITE MEMORY TO FILE

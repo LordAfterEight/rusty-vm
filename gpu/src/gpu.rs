@@ -1,16 +1,7 @@
 use crate::opcodes;
 use std::{fs::OpenOptions, os::unix::fs::FileExt};
 use std::io::Read;
-
-use std::process::Command;
-
 use std::env;
-
-#[cfg(target_os = "linux")]
-use nix::{
-    sys::signal::{Signal, kill},
-    unistd::Pid,
-};
 
 const FONT_SIZE: f32 = 16.0;
 
@@ -39,7 +30,7 @@ impl GPU {
             .expect("Memory image missing");
 
         #[cfg(target_os = "windows")]
-        let img = OpenOptions::new()
+        let mut img = OpenOptions::new()
             .read(true)
             .open(format!("{}\\..\\ROM.bin", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
@@ -57,7 +48,7 @@ impl GPU {
             buf_ptr: 0x0300, // 0x0300 - 0x0FFF => 768 - 4096, so 3328 16-bit addresses
             memory,
             frame_buffer: [[Character::new(' '); 48]; 92],
-            cursor: Cursor::new(CursorShapes::Block),
+            cursor: Cursor::new(CursorShapes::Underline),
             cursor_visible: false,
             draw_mode: false,
             draw_color: macroquad::color::WHITE,
@@ -78,11 +69,11 @@ impl GPU {
 
     pub async fn draw_framebuffer(&mut self) {
         if self.cursor_visible {
-            let mut cursor = "_";
+            let cursor;
             match self.cursor.shape {
+                CursorShapes::Underline => cursor = "_",
                 CursorShapes::Block => cursor = "█",
-                CursorShapes::VertiBar => cursor = "|",
-                _ => {}
+                CursorShapes::VertiBar => cursor = "|"
             }
             macroquad::text::draw_text(
                 cursor,
@@ -99,7 +90,7 @@ impl GPU {
                     x as f32 * 7.0 + 2.0,
                     y as f32 * 12.0 + 10.0,
                     FONT_SIZE,
-                    self.frame_buffer[x][y].color,
+                    self.frame_buffer[x][y].fg_color,
                 );
             }
         }
@@ -127,7 +118,7 @@ impl GPU {
         }
 
         #[cfg(not(target_os = "windows"))]
-        let mut img = OpenOptions::new()
+        let img = OpenOptions::new()
             .read(true)
             .open(format!("{}/../ROM.bin", env!("CARGO_MANIFEST_DIR")))
             .expect("Memory image missing");
@@ -181,12 +172,12 @@ impl GPU {
                         );
 
                         match CharColors::from_u8(color_byte).unwrap() {
-                            CharColors::White => char.color = macroquad::color::WHITE,
-                            CharColors::Red => char.color = macroquad::color::RED,
-                            CharColors::Green => char.color = macroquad::color::GREEN,
-                            CharColors::Blue => char.color = macroquad::color::BLUE,
-                            CharColors::Cyan => char.color = macroquad::color::Color::new(0.5,0.9,1.0,1.0),
-                            CharColors::Magenta => char.color = macroquad::color::MAGENTA,
+                            CharColors::White => char.fg_color = macroquad::color::WHITE,
+                            CharColors::Red => char.fg_color = macroquad::color::RED,
+                            CharColors::Green => char.fg_color = macroquad::color::GREEN,
+                            CharColors::Blue => char.fg_color = macroquad::color::BLUE,
+                            CharColors::Cyan => char.fg_color = macroquad::color::Color::new(0.5,0.9,1.0,1.0),
+                            CharColors::Magenta => char.fg_color = macroquad::color::MAGENTA,
                         }
 
                         self.frame_buffer[self.cursor.position.0][self.cursor.position.1] = char;
@@ -244,7 +235,7 @@ impl GPU {
                     for y in 0..48 {
                         for x in 0..91 {
                             self.frame_buffer[x][y].literal = ' ';
-                            self.frame_buffer[x][y].color = macroquad::color::BLACK;
+                            self.frame_buffer[x][y].fg_color = macroquad::color::BLACK;
                         }
                     }
                     self.cursor.position = (0,0);
@@ -275,14 +266,16 @@ impl GPU {
 #[derive(Debug, Clone, Copy)]
 pub struct Character {
     pub literal: char,
-    pub color: macroquad::color::Color,
+    pub fg_color: macroquad::color::Color,
+    pub bg_color: macroquad::color::Color,
 }
 
 impl Character {
     pub fn new(char: char) -> Self {
         Self {
             literal: char,
-            color: macroquad::color::WHITE,
+            fg_color: macroquad::color::WHITE,
+            bg_color: macroquad::color::BLACK,
         }
     }
 }

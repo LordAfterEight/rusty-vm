@@ -29,7 +29,6 @@ async fn main() {
         loop {
             if cpu.halt_flag == false {
                 println!();
-                //_ = clearscreen::clear();
                 #[cfg(debug_assertions)]
                 debug!(
                     "CPU instruction pointer: ",

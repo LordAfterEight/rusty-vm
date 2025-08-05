@@ -1,5 +1,5 @@
 use std::fs::OpenOptions;
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::Read;
 use std::os::unix::fs::FileExt;
 
 use crate::opcodes;

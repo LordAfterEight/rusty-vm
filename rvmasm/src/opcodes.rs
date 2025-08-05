@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 // NOTE: CPU OPCODES
 
 // --- OpCodes: NoOp

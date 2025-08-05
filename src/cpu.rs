@@ -1,5 +1,4 @@
 use crate::opcodes::*;
-use std::process::{id, Command};
 use std::default::Default;
 
 #[derive(Debug)]
@@ -174,8 +173,8 @@ impl CPU {
                 self.increase_instr_ptr();
             }
             COMP_REGS => {
-                let mut text_1 = String::new();
-                let mut text_2 = String::new();
+                let text_1;
+                let text_2;
                 let mut val_1 = self.read_word();
                 let mut val_2 = self.read_word();
 
