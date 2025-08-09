@@ -120,7 +120,7 @@ draw str Hello^World! col red  # Will print a red "Hello World!" to the screen
 
 ## Routines <a name="Routines"></a>
 ```routine: <RoutineName>``` is used to create a routine. Every line below a ```routine: <RoutineName>``` will be part of that routine, until the keyword ```end``` is encountered. ```end```, as the name implies, marks the end of the routine.
-All routines that are not the ```entry``` routine **must** be defined _before_ the ```entry``` routine is defined, so they're known to the assembler. This example program loads the A register with the value 1 and then runs a loop that
+All routines **must** be defined before being used. This example program loads the A register with the value 1 and then runs a loop that
 increments the value in the A register by 1 for every iteration until it reaches 10000, returns and halts the CPU:
 ```ruby
 routine: loop
