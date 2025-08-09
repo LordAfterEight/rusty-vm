@@ -202,6 +202,36 @@ fn main() {
                         routines[routine_ptr].instructions.push(gpu_ptr as u16 + 1);
                         gpu_ptr += 2;
                     }
+                    "ctrl" => {
+                        match instruction[1] {
+                            "gpu" => {
+                                println!("GPU Control: {}", instruction[2]);
+                                let mut instr = 0xA000;
+                                match instruction[2] {
+                                    "clear" => instr = opcodes::GPU_RES_F_BUF,
+                                    "reset" => instr = opcodes::GPU_RESET_PTR,
+                                    "update" => instr = opcodes::GPU_UPDATE,
+                                    _ => panic("Unknown GPU control", &instruction, code_line, 3),
+                                }
+                                routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
+                                routines[routine_ptr].instructions.push(instr);
+                                routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
+                                routines[routine_ptr].instructions.push(gpu_ptr as u16);
+                                gpu_ptr += 1;
+                            }
+                            "cpu" => {
+                                println!("CPU Control: {}", instruction[2]);
+                                let mut instr = 0xA000;
+                                match instruction[2] {
+                                    "reset" => instr = opcodes::NO_OPERAT,
+                                    "halt" => instr = opcodes::HALT_LOOP,
+                                    _ => panic("Unknown CPU control", &instruction, code_line, 3),
+                                }
+                                routines[routine_ptr].instructions.push(instr);
+                            }
+                            _ => panic("Unknown control", &instruction, code_line, 2),
+                        }
+                    }
                     "radd" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
@@ -289,10 +319,6 @@ fn main() {
                     "rtor" => {
                         println!("Returning to origin");
                         routines[routine_ptr].instructions.push(opcodes::RET_TO_OR);
-                    }
-                    "halt" => {
-                        routines[routine_ptr].instructions.push(opcodes::HALT_LOOP);
-                        println!("Halt");
                     }
                     "end" => {
                         routines[routine_ptr].length = routines[routine_ptr].instructions.len() as u16;
