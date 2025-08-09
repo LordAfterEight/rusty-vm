@@ -211,7 +211,7 @@ fn main() {
                                     "clear" => instr = opcodes::GPU_RES_F_BUF,
                                     "reset" => instr = opcodes::GPU_RESET_PTR,
                                     "update" => instr = opcodes::GPU_UPDATE,
-                                    _ => panic("Unknown GPU control", &instruction, code_line, 3),
+                                    _ => panic("Unknown GPU control", &instruction, code_line, 2),
                                 }
                                 routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
                                 routines[routine_ptr].instructions.push(instr);
@@ -225,7 +225,7 @@ fn main() {
                                 match instruction[2] {
                                     "reset" => instr = opcodes::NO_OPERAT,
                                     "halt" => instr = opcodes::HALT_LOOP,
-                                    _ => panic("Unknown CPU control", &instruction, code_line, 3),
+                                    _ => panic("Unknown CPU control", &instruction, code_line, 2),
                                 }
                                 routines[routine_ptr].instructions.push(instr);
                             }
