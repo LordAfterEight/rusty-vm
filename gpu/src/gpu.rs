@@ -3,7 +3,7 @@ use std::{fs::OpenOptions, os::unix::fs::FileExt};
 use std::io::Read;
 use std::env;
 
-const FONT_SIZE: f32 = 16.0 * crate::SCALING;
+static mut FONT_SIZE: f32 = 16.0 * 1.0;
 
 #[derive(Debug)]
 pub struct GPU {
@@ -79,9 +79,9 @@ impl GPU {
             }
             macroquad::text::draw_text(
                 cursor,
-                (self.cursor.position.0 as f32 * 7.0 + 2.0) * crate::SCALING,
-                (self.cursor.position.1 as f32 * 12.0 + 10.0) * crate::SCALING,
-                FONT_SIZE,
+                (self.cursor.position.0 as f32 * 7.0 + 2.0) * unsafe { crate::SCALING },
+                (self.cursor.position.1 as f32 * 12.0 + 10.0) * unsafe { crate::SCALING },
+                unsafe { FONT_SIZE },
                 self.draw_color
             );
         }
@@ -89,9 +89,9 @@ impl GPU {
             for x in 0..self.frame_buffer.len() {
                 macroquad::text::draw_text(
                     &format!("{}", self.frame_buffer[x][y].literal) as &str,
-                    (x as f32 * 7.0 + 2.0) * crate::SCALING,
-                    (y as f32 * 12.0 + 10.0) * crate::SCALING,
-                    FONT_SIZE,
+                    (x as f32 * 7.0 + 2.0) * unsafe { crate::SCALING },
+                    (y as f32 * 12.0 + 10.0) * unsafe { crate::SCALING },
+                    unsafe { FONT_SIZE },
                     self.frame_buffer[x][y].fg_color,
                 );
             }
@@ -111,6 +111,13 @@ impl GPU {
                 std::process::exit(0);
             }
             if macroquad::input::is_key_pressed(macroquad::input::KeyCode::F11) {
+                if self.fullscreen {
+                    unsafe { crate::SCALING = 1.0 }
+                    unsafe { FONT_SIZE /= 2.0 };
+                } else {
+                    unsafe { crate::SCALING = 2.0 }
+                    unsafe { FONT_SIZE *= 2.0 };
+                }
                 self.fullscreen = !self.fullscreen;
                 macroquad::window::set_fullscreen(self.fullscreen);
             }
