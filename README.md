@@ -15,7 +15,7 @@ and turns them into a memory file with binary content for the VM to read and wri
 # Parts / Modules
 The VM consists of (currently) three key parts: the CPU, the GPU and the memory
 - The CPU reads instructions from the memory, executes them and manages the GPU. It also writes to the memory, primarily to the GPU buffer to control what the GPU does
-- The GPU has its own personal space in the memory, called the GPU Buffer. It spans from address ```0x0300``` to address ```0x0FFF```, so 3328 16-bit spaces or 1024B
+- The GPU has its own personal space in the memory, called the GPU Buffer. It spans from address ```0x0300``` to address ```0x0FFF```, so 3328 16-bit spaces or 6654B
 - The memory is basically the communication layer between the CPU and the GPU and at the same time that makes both able to do literally anything. It's 128kB in size (65536 16-bit addresses) and certain regions are always preprogrammed
 
 <details>
@@ -27,7 +27,7 @@ The VM consists of (currently) three key parts: the CPU, the GPU and the memory
   | ```0x0000 - 0x01FF``` | Currently unused                             |
   | ```0x0200 - 0x0250``` | ASCII buffer with stored letters and symbols |
   | ```0x0251 - 0x02FF``` | Currently unused                             |
-  | ```0x0300 - 0x04FF``` | GPU buffer                                   |
+  | ```0x0300 - 0x0FFF``` | GPU buffer                                   |
   | ```0x0500 - 0xFFFF``` | Empty space, used for programs               |
 
 </details>
