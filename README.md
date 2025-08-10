@@ -28,7 +28,7 @@ The VM consists of (currently) three key parts: the CPU, the GPU and the memory
   | ```0x0200 - 0x0250``` | ASCII buffer with stored letters and symbols |
   | ```0x0251 - 0x02FF``` | Currently unused                             |
   | ```0x0300 - 0x0FFF``` | GPU buffer                                   |
-  | ```0x0500 - 0xFFFF``` | Empty space, used for programs               |
+  | ```0x1000 - 0xFFFF``` | Empty space, used for programs               |
 
 </details>
 
