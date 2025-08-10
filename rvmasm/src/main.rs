@@ -95,10 +95,10 @@ fn main() {
     let mut mode = Mode::Normal;
     let mut fs_ptr = 0;
     let mut routine_ptr = 0;
+    let mut file_systems = Vec::<fs::FileSystem>::new();
     let mut routines = Vec::<Routine>::new();
     let mut routine_addresses = Vec::<u16>::new();
 
-    let mut file_systems = Vec::<fs::FileSystem>::new();
 
     for line in code_string.lines() {
         let instruction: Vec<&str> = line.split(' ').collect();
@@ -107,27 +107,25 @@ fn main() {
                 match instruction[0] {
                     "size" => {
                         match instruction.len() {
-                            1 | 3 => panic("Missing size definition", &instruction, code_line, 1),
-                            2 => panic("Expected argument of type(s): num, lit, hex", &instruction, code_line, 1),
+                            1 => panic("Missing size definition", &instruction, code_line, 0),
+                            2 => panic("Expected argument of type: num/lit/hex", &instruction, code_line, 1),
+                            3 => panic("Expected argument of type: num/lit/hex. Maybe the type annotation is missing?", &instruction, code_line, 2),
                             _ => {}
                         }
                         match instruction[1] {
                             "=" => {
-                                let size = parse_hex_lit_num(&instruction, code_line, 2, 0);
-                                println!("Filesystem size: {}B", size);
-                                routines[routine_ptr].length = size / 2;
-                                file_systems[fs_ptr].size = size as usize;
-                                instr_ptr += size as usize;
+                                let size = parse_hex_lit_num(&instruction, code_line, 2, 0) * 2;
+                                routines[routine_ptr].length = size;
+                                file_systems[fs_ptr].size = size as usize / 2;
+                                println!("  -> Preallocating {} Bytes", size);
                             }
                             _ => panic("Expected \"=\"", &instruction, code_line, 1)
                         }
                     }
                     "end" => {
                         routines[routine_ptr].length = routines[routine_ptr].instructions.len() as u16;
-                        println!("Size: {}B", file_systems[fs_ptr].size);
                         routine_addresses.push(routines[routine_ptr].address);
-                        instr_ptr += file_systems[fs_ptr].size / 2 as usize + 1;
-                        println!("Instruction pointer: {:#06X}", instr_ptr);
+                        instr_ptr += file_systems[fs_ptr].size as usize + 1;
                         mode = Mode::Normal;
                         routine_ptr += 1;
                         fs_ptr += 1;
@@ -138,7 +136,6 @@ fn main() {
             }
             Mode::DefineRoutine => {
                 routines[routine_ptr].address = instr_ptr as u16;
-                print!("{}: ", routines[routine_ptr].name);
                 match instruction[0] {
                     "load" => {
                         let register = parse_regs(&instruction, code_line, 1);
@@ -149,7 +146,6 @@ fn main() {
                             _ => 0
                         };
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
-                        println!("Load value {} into {} register", value, char::from(register as u8));
                         routines[routine_ptr].instructions.push(instr);
                         routines[routine_ptr].instructions.push(value);
                     }
@@ -162,14 +158,12 @@ fn main() {
                             _ => 0
                         };
                         let addr = parse_hex_lit_num(&instruction, code_line, 2, 0);
-                        println!("Store {} register to {:#06X}", char::from(register as u8), addr);
                         routines[routine_ptr].instructions.push(instr);
                         routines[routine_ptr].instructions.push(addr);
                     }
                     "draw" => {
                         match instruction[1] {
                             "str" => {
-                                println!("Print \"{}\" to the screen", instruction[2]);
                                 let mut color_byte = 0x0A;
                                 if instruction.len() > 3 {
                                     match instruction[3] {
@@ -221,7 +215,6 @@ fn main() {
                         }
                     }
                     "cmov" => {
-                        println!("Moving cursor: {}", instruction[1]);
                         let mut instr = 0xA000;
                         match instruction[1] {
                             "up" => instr = opcodes::GPU_MV_C_UP,
@@ -245,7 +238,6 @@ fn main() {
                     "ctrl" => {
                         match instruction[1] {
                             "gpu" => {
-                                println!("GPU Control: {}", instruction[2]);
                                 let mut instr = 0xA000;
                                 match instruction[2] {
                                     "clear" => instr = opcodes::GPU_RES_F_BUF,
@@ -260,7 +252,6 @@ fn main() {
                                 gpu_ptr += 1;
                             }
                             "cpu" => {
-                                println!("CPU Control: {}", instruction[2]);
                                 let mut instr = 0xA000;
                                 match instruction[2] {
                                     "reset" => instr = opcodes::NO_OPERAT,
@@ -275,7 +266,6 @@ fn main() {
                     "radd" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
-                        println!("Adding value {} to register {}", value, char::from(register as u8));
                         routines[routine_ptr].instructions.push(opcodes::INC_REG_V);
                         routines[routine_ptr].instructions.push(register);
                         routines[routine_ptr].instructions.push(value);
@@ -283,7 +273,6 @@ fn main() {
                     "rsub" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
-                        println!("Subtracting value {} from register {}", value, char::from(register as u8));
                         routines[routine_ptr].instructions.push(opcodes::DEC_REG_V);
                         routines[routine_ptr].instructions.push(register);
                         routines[routine_ptr].instructions.push(value);
@@ -291,7 +280,6 @@ fn main() {
                     "rmul" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
-                        println!("Multiplying {} register value by {}", char::from(register as u8), value);
                         routines[routine_ptr].instructions.push(opcodes::MUL_REG_V);
                         routines[routine_ptr].instructions.push(register);
                         routines[routine_ptr].instructions.push(value);
@@ -299,7 +287,6 @@ fn main() {
                     "rdiv" => {
                         let register = parse_regs(&instruction, code_line, 1);
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
-                        println!("Dividing {} register value by {}", char::from(register as u8), value);
                         routines[routine_ptr].instructions.push(opcodes::DIV_REG_V);
                         routines[routine_ptr].instructions.push(register);
                         routines[routine_ptr].instructions.push(value);
@@ -307,28 +294,24 @@ fn main() {
                     "jusr" => {
                         let subroutine_name = instruction [1];
                         let new_address = return_routine_address(subroutine_name, &mut routines);
-                        println!("Jump to routine at {:#06X}", new_address);
                         routines[routine_ptr].instructions.push(opcodes::JMP_TO_SR);
                         routines[routine_ptr].instructions.push(new_address);
                     }
                     "jump" => {
                         let subroutine_name = instruction [1];
                         let new_address = return_routine_address(subroutine_name, &mut routines);
-                        println!("Jump to {:#06X}", new_address);
                         routines[routine_ptr].instructions.push(opcodes::JMP_TO_AD);
                         routines[routine_ptr].instructions.push(new_address);
                     }
                     "juie" => {
                         let subroutine_name = instruction [1];
                         let new_address = return_routine_address(subroutine_name, &mut routines);
-                        println!("Jump to {:#06X} if eq_flag is set", new_address);
                         routines[routine_ptr].instructions.push(opcodes::JUMP_IFEQ);
                         routines[routine_ptr].instructions.push(new_address);
                     }
                     "juin" => {
                         let subroutine_name = instruction [1];
                         let new_address = return_routine_address(subroutine_name, &mut routines);
-                        println!("Jump to {:#06X} if eq_flag is not set", new_address);
                         routines[routine_ptr].instructions.push(opcodes::JUMP_INEQ);
                         routines[routine_ptr].instructions.push(new_address);
                     }
@@ -337,18 +320,13 @@ fn main() {
                         let val_b;
                         if instruction[1] == "reg" {
                             val_a = parse_regs(&instruction, code_line, 2);
-                            print!("Comparing register {} ", char::from(val_a as u8));
                         } else {
                             val_a = parse_hex_lit_num(&instruction, code_line, 2, 0);
-                            print!("Comparing value {} ", val_a);
                         }
-                        print!("with ");
                         if instruction[3] == "reg" {
                             val_b = parse_regs(&instruction, code_line, 4);
-                            print!("register {}\n", char::from(val_b as u8));
                         } else {
                             val_b = parse_hex_lit_num(&instruction, code_line, 3, 0);
-                            print!("value {}\n", val_b);
                         }
                         routines[routine_ptr].instructions.push(opcodes::COMP_REGS);
                         routines[routine_ptr].instructions.push(val_a);
@@ -357,15 +335,12 @@ fn main() {
                         }
                     }
                     "rtor" => {
-                        println!("Returning to origin");
                         routines[routine_ptr].instructions.push(opcodes::RET_TO_OR);
                     }
                     "end" => {
                         routines[routine_ptr].length = routines[routine_ptr].instructions.len() as u16;
-                        println!("Size: {}B", routines[routine_ptr].length * 2);
                         routine_addresses.push(routines[routine_ptr].address);
                         instr_ptr += routines[routine_ptr].length as usize + 1;
-                        println!("Instruction pointer: {:#06X}", instr_ptr);
                         mode = Mode::Normal;
                         if routines[routine_ptr].name != "entry" {
                             routine_ptr += 1;
@@ -381,13 +356,13 @@ fn main() {
                     "routine:" => {
                         mode = Mode::DefineRoutine;
                         routines.push(Routine::new(instruction[1].to_string(), instr_ptr as u16));
-                        println!("\n{} \"{}\" at {}", "Building routine".green(), routines[routine_ptr].name.cyan(), format!("{:#06X}", instr_ptr).yellow());
+                        println!("{} \"{}\" @ {}", "Building routine".green(), routines[routine_ptr].name.cyan(), format!("{:#06X}", instr_ptr).yellow());
                     },
                     "filesys:" => {
                         mode = Mode::DefineFileSystem;
                         routines.push(Routine::new("Filesystem".to_string(), instr_ptr as u16));
                         file_systems.push(fs::FileSystem::new(instr_ptr));
-                        println!("\n{} \"{}\" at {}", "Building filesystem".magenta(), routines[routine_ptr].name.cyan(), format!("{:#06X}", instr_ptr).yellow());
+                        println!("{} \"{}\" @ {}", "Building filesystem".magenta(), routines[routine_ptr].name.cyan(), format!("{:#06X}", instr_ptr).yellow());
                     }
                     "#" | "" | "   " => {
                         continue;
@@ -414,7 +389,8 @@ fn main() {
             memory[instr_ptr + filesystem.offset_ptr] = content.words[filesystem.offset_ptr];
             filesystem.offset_ptr += 1;
         }
-        instr_ptr += filesystem.size as usize / 2 + 1;
+        instr_ptr += filesystem.size as usize;
+        addr_used += filesystem.size as usize;
     }
 
     for mut routine in routines {
@@ -432,13 +408,22 @@ fn main() {
             addr_used += 1;
         }
     }
-    println!(
-        "Program uses {} addresses and ~{:.2}% of the ROM\nROM: {}B/{}KiB",
-        addr_used,
-        (addr_used as f32 / 65536.0) * 100.0,
-        addr_used * 2,
-        ROM_SIZE / 1024 * 2
-    );
+
+    let mut size = addr_used as f32 * 2.0;
+
+    let size_suffix = if addr_used as f32 * 2.0 > 1024.0 { "KiB" } else { "B" };
+
+    if size_suffix == "KiB" {
+        size /= 1024.0;
+    }
+
+    if size_suffix == "KiB" {
+        print!("ROM usage: {:.2}{}/128KiB", size, size_suffix);
+    } else {
+        print!("ROM usage: {}{}/128KiB", size as usize, size_suffix);
+    }
+
+    println!(" | ~{:.2}%", (addr_used as f32 / 65536.0) * 100.0);
 }
 
 fn return_routine_address(routine_name: &str, routines: &Vec<Routine>) -> u16 {
