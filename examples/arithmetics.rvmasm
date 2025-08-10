@@ -54,5 +54,5 @@ draw str valid col green
 cmov nl
 draw str All^tests^valid col green
 cmov nl
-halt
+ctrl cpu halt
 end

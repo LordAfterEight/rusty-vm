@@ -332,7 +332,7 @@ fn main() {
                         }
                         continue;
                     }
-                    "   " | "" | "//" => {}
+                    "   " | "" | "//" => code_line += 1,
                     _ => panic("\nMissing indentation",&instruction, code_line, 0)
                 }
             },
@@ -344,11 +344,11 @@ fn main() {
                         println!("\n{} \"{}\" at {}", "Building routine".green(), routines[routine_ptr].name.cyan(), format!("{:#06X}", instr_ptr).yellow());
                     },
                     "#" | "" | "   " => {
-                        code_line += 1;
                         continue;
                     },
                     _ => panic("",&instruction, code_line, 0)
                 }
+                code_line += 1;
             }
         }
         code_line += 1;

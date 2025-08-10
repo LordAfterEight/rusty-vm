@@ -3,11 +3,10 @@ use std::default::Default;
 
 #[derive(Debug)]
 pub struct CPU {
-    // --- CPU ---
     pub name: String,
 
     pub instr_ptr: u16,
-    pub stack_ptr: u8,
+    pub stack_ptr: u16,
 
     pub a_reg: u16,
     pub x_reg: u16,
@@ -29,7 +28,7 @@ impl CPU {
             name: String::from("OwO CPU"),
 
             instr_ptr: 0x1000, // NOTE: Code space is 0x1000 - 0xFFFE => So 64254 spaces for programs
-            stack_ptr: 0x00,   // NOTE: 0x00 - 0x1FF => 0 - 511, so 512 16-bit addresses in the stack
+            stack_ptr: 0x0000, // NOTE: 0x00 - 0x3FF => 0 - 1023, so 1024 16-bit addresses in the stack
 
             a_reg: Default::default(),
             x_reg: Default::default(),
@@ -71,7 +70,6 @@ impl CPU {
         }
     }
 
-    /// Reads the value at the address the instruction pointer is pointing to and returns it
     pub fn read_word(&mut self) -> u16 {
         let instruction = self
             .memory
@@ -81,7 +79,6 @@ impl CPU {
         instruction
     }
 
-    /// Reads the value at the address the instruction pointer is pointing to and returns it
     pub fn read_at(&mut self, address: u16) -> u16 {
         let instruction = self
             .memory
