@@ -3,12 +3,15 @@ use std::char;
 use std::io::Write;
 use std::{fs::OpenOptions, io::Read};
 
+const ROM_SIZE: usize = 65536; // 64 KiB
+
 // TODO:
 
 mod opcodes;
+mod fs;
 
 fn main() {
-    let mut memory = [0; u16::MAX as usize];
+    let mut memory = [0; ROM_SIZE];
 
     let in_path = std::env::args()
         .skip(1)
@@ -35,6 +38,7 @@ fn main() {
 
     let mut img_file = OpenOptions::new()
         .write(true)
+        .create(true)
         .truncate(true)
         .open(format!("{}", out_path.unwrap()))
         .expect("ROM file must exist");
@@ -88,15 +92,51 @@ fn main() {
 
     let mut code_line = 1;
 
-    let mut define_mode = false;
+    let mut mode = Mode::Normal;
+    let mut fs_ptr = 0;
     let mut routine_ptr = 0;
     let mut routines = Vec::<Routine>::new();
     let mut routine_addresses = Vec::<u16>::new();
 
+    let mut file_systems = Vec::<fs::FileSystem>::new();
+
     for line in code_string.lines() {
         let instruction: Vec<&str> = line.split(' ').collect();
-        match define_mode {
-            true => {
+        match mode {
+            Mode::DefineFileSystem => {
+                match instruction[0] {
+                    "size" => {
+                        match instruction.len() {
+                            1 | 3 => panic("Missing size definition", &instruction, code_line, 1),
+                            2 => panic("Expected argument of type(s): num, lit, hex", &instruction, code_line, 1),
+                            _ => {}
+                        }
+                        match instruction[1] {
+                            "=" => {
+                                let size = parse_hex_lit_num(&instruction, code_line, 2, 0);
+                                println!("Filesystem size: {}B", size);
+                                routines[routine_ptr].length = size / 2;
+                                file_systems[fs_ptr].size = size as usize;
+                                instr_ptr += size as usize;
+                            }
+                            _ => panic("Expected \"=\"", &instruction, code_line, 1)
+                        }
+                    }
+                    "end" => {
+                        routines[routine_ptr].length = routines[routine_ptr].instructions.len() as u16;
+                        println!("Size: {}B", file_systems[fs_ptr].size);
+                        routine_addresses.push(routines[routine_ptr].address);
+                        instr_ptr += file_systems[fs_ptr].size / 2 as usize + 1;
+                        println!("Instruction pointer: {:#06X}", instr_ptr);
+                        mode = Mode::Normal;
+                        routine_ptr += 1;
+                        fs_ptr += 1;
+                    }
+                    "   " | "" | "//" => code_line += 1,
+                    _ => panic("\nMissing indentation",&instruction, code_line, 0)
+                }
+            }
+            Mode::DefineRoutine => {
                 routines[routine_ptr].address = instr_ptr as u16;
                 print!("{}: ", routines[routine_ptr].name);
                 match instruction[0] {
@@ -322,11 +362,11 @@ fn main() {
                     }
                     "end" => {
                         routines[routine_ptr].length = routines[routine_ptr].instructions.len() as u16;
-                        println!("Has length of {}", routines[routine_ptr].length);
+                        println!("Size: {}B", routines[routine_ptr].length * 2);
                         routine_addresses.push(routines[routine_ptr].address);
                         instr_ptr += routines[routine_ptr].length as usize + 1;
                         println!("Instruction pointer: {:#06X}", instr_ptr);
-                        define_mode = false;
+                        mode = Mode::Normal;
                         if routines[routine_ptr].name != "entry" {
                             routine_ptr += 1;
                         }
@@ -336,13 +376,19 @@ fn main() {
                     _ => panic("\nMissing indentation",&instruction, code_line, 0)
                 }
             },
-            false => {
+            Mode::Normal => {
                 match instruction[0] {
                     "routine:" => {
-                        define_mode = true;
+                        mode = Mode::DefineRoutine;
                         routines.push(Routine::new(instruction[1].to_string(), instr_ptr as u16));
                         println!("\n{} \"{}\" at {}", "Building routine".green(), routines[routine_ptr].name.cyan(), format!("{:#06X}", instr_ptr).yellow());
                     },
+                    "filesys:" => {
+                        mode = Mode::DefineFileSystem;
+                        routines.push(Routine::new("Filesystem".to_string(), instr_ptr as u16));
+                        file_systems.push(fs::FileSystem::new(instr_ptr));
+                        println!("\n{} \"{}\" at {}", "Building filesystem".magenta(), routines[routine_ptr].name.cyan(), format!("{:#06X}", instr_ptr).yellow());
+                    }
                     "#" | "" | "   " => {
                         continue;
                     },
@@ -363,6 +409,14 @@ fn main() {
     memory[0x1001] = routine_addresses[routine_addresses.len() - 1];
     instr_ptr += 2;
 
+    for mut filesystem in file_systems {
+        for content in &filesystem.content {
+            memory[instr_ptr + filesystem.offset_ptr] = content.words[filesystem.offset_ptr];
+            filesystem.offset_ptr += 1;
+        }
+        instr_ptr += filesystem.size as usize / 2 + 1;
+    }
+
     for mut routine in routines {
         for instruction in &routine.instructions {
             memory[instr_ptr + routine.offset_ptr] = *instruction;
@@ -379,9 +433,11 @@ fn main() {
         }
     }
     println!(
-        "Program uses {} addresses and ~{:.2}% of the ROM",
+        "Program uses {} addresses and ~{:.2}% of the ROM\nROM: {}B/{}KiB",
         addr_used,
-        (addr_used as f32 / 65536.0) * 100.0
+        (addr_used as f32 / 65536.0) * 100.0,
+        addr_used * 2,
+        ROM_SIZE / 1024 * 2
     );
 }
 
@@ -444,6 +500,15 @@ fn parse_hex_lit_num(instruction: &Vec<&str>, code_line: usize, arg_pos: usize, 
 }
 
 #[derive(Clone)]
+pub struct Statement {
+    pub name: String,
+    pub address: u16,
+    pub offset_ptr: usize,
+    pub instructions: Vec<u16>,
+    pub length: u16
+}
+
+#[derive(Clone)]
 pub struct Routine {
     pub name: String,
     pub address: u16,
@@ -482,4 +547,10 @@ fn panic(message: &str, instruction: &Vec<&str>, line: usize, instr: usize) {
         format!(" --> At Line {} | Position {}\n", line, offset).red()
     );
     panic!();
+}
+
+enum Mode {
+    Normal,
+    DefineRoutine,
+    DefineFileSystem,
 }

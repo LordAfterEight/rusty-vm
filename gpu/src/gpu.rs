@@ -3,7 +3,7 @@ use std::{fs::OpenOptions, os::unix::fs::FileExt};
 use std::io::Read;
 use std::env;
 
-const FONT_SIZE: f32 = 16.0;
+const FONT_SIZE: f32 = 16.0 * crate::SCALING;
 
 #[derive(Debug)]
 pub struct GPU {
@@ -18,6 +18,7 @@ pub struct GPU {
     pub pri_counter: usize,
     pub sec_counter: usize,
     pub int_flag: bool,
+    pub fullscreen: bool,
 }
 
 
@@ -56,6 +57,7 @@ impl GPU {
             pri_counter: 0,
             sec_counter: 0,
             int_flag: false,
+            fullscreen: false,
         }
     }
 
@@ -77,8 +79,8 @@ impl GPU {
             }
             macroquad::text::draw_text(
                 cursor,
-                self.cursor.position.0 as f32 * 7.0 + 2.0,
-                self.cursor.position.1 as f32 * 12.0 + 10.0,
+                (self.cursor.position.0 as f32 * 7.0 + 2.0) * crate::SCALING,
+                (self.cursor.position.1 as f32 * 12.0 + 10.0) * crate::SCALING,
                 FONT_SIZE,
                 self.draw_color
             );
@@ -87,8 +89,8 @@ impl GPU {
             for x in 0..91 {
                 macroquad::text::draw_text(
                     &format!("{}", self.frame_buffer[x][y].literal) as &str,
-                    x as f32 * 7.0 + 2.0,
-                    y as f32 * 12.0 + 10.0,
+                    (x as f32 * 7.0 + 2.0) * crate::SCALING,
+                    (y as f32 * 12.0 + 10.0) * crate::SCALING,
                     FONT_SIZE,
                     self.frame_buffer[x][y].fg_color,
                 );
@@ -107,6 +109,10 @@ impl GPU {
         if self.pri_counter == 99 {
             if macroquad::input::is_key_down(macroquad::input::KeyCode::Escape) {
                 std::process::exit(0);
+            }
+            if macroquad::input::is_key_pressed(macroquad::input::KeyCode::F11) {
+                self.fullscreen = !self.fullscreen;
+                macroquad::window::set_fullscreen(self.fullscreen);
             }
             self.draw_framebuffer().await;
             self.sec_counter += 1;

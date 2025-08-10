@@ -3,6 +3,8 @@ pub mod opcodes;
 
 use std::default::Default;
 
+pub const SCALING: f32 = 1.0;
+
 // NOTE: MEMORY LAYOUT
 // 0x0000 - 0x01FF | STACK (512 16-bit / 1024B)
 // 0x0200 - 0x0219 | A-Z
@@ -17,9 +19,10 @@ use std::default::Default;
 fn window_config() -> macroquad::window::Conf {
     macroquad::window::Conf {
         window_title: "Rusty-VM".to_string(),
-        window_width: 640,
-        window_height: 480,
+        window_width: 960 * SCALING as i32,
+        window_height: 540 * SCALING as i32,
         window_resizable: false,
+        fullscreen: false,
         ..Default::default()
     }
 }

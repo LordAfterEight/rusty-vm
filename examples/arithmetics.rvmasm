@@ -33,24 +33,24 @@ end
 # Entry routine. Program will always start here
 routine: entry
 load A num 1
-draw str Testing^multiplication...^ col white
+draw str Testing^multiplication... col white
 jusr multiply_loop
-draw str valid col green
+draw str ^valid col green
 cmov nl
 load A num 65535
-draw str Testing^division...^ col white
+draw str Testing^division... col white
 jusr divide_loop
-draw str valid col green
+draw str ^^^^^^^valid col green
 cmov nl
 load A num 1
-draw str Testing^addition...^ col white
+draw str Testing^addition... col white
 jusr increment_loop
-draw str valid col green
+draw str ^^^^^^^valid col green
 cmov nl
 load A num 65535
-draw str Testing^subtraction...^ col white
+draw str Testing^subtraction... col white
 jusr decrement_loop
-draw str valid col green
+draw str ^^^^valid col green
 cmov nl
 draw str All^tests^valid col green
 cmov nl
