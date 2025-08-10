@@ -9,7 +9,7 @@ const FONT_SIZE: f32 = 16.0 * crate::SCALING;
 pub struct GPU {
     pub buf_ptr: u16,
     pub memory: Vec<u16>,
-    pub frame_buffer: [[Character; 48]; 92],
+    pub frame_buffer: [[Character; 45]; 136],
     pub cursor: Cursor,
     pub cursor_visible: bool,
     pub draw_mode: bool,
@@ -48,7 +48,7 @@ impl GPU {
         Self {
             buf_ptr: 0x0300, // 0x0300 - 0x0FFF => 768 - 4096, so 3328 16-bit addresses
             memory,
-            frame_buffer: [[Character::new(' '); 48]; 92],
+            frame_buffer: [[Character::new(' '); 45]; 136],
             cursor: Cursor::new(CursorShapes::Underline),
             cursor_visible: false,
             draw_mode: false,
@@ -85,8 +85,8 @@ impl GPU {
                 self.draw_color
             );
         }
-        for y in 0..40 {
-            for x in 0..91 {
+        for y in 0..self.frame_buffer[0].len() {
+            for x in 0..self.frame_buffer.len() {
                 macroquad::text::draw_text(
                     &format!("{}", self.frame_buffer[x][y].literal) as &str,
                     (x as f32 * 7.0 + 2.0) * crate::SCALING,
@@ -187,11 +187,11 @@ impl GPU {
                         }
 
                         self.frame_buffer[self.cursor.position.0][self.cursor.position.1] = char;
-                        if self.cursor.position.0 < 91 {
+                        if self.cursor.position.0 < self.frame_buffer.len() - 1 {
                             self.cursor.position.0 += 1;
                         } else {
                             self.cursor.position.0 = 0;
-                            if self.cursor.position.1 < 48 {
+                            if self.cursor.position.1 < self.frame_buffer[0].len() - 1 {
                                 self.cursor.position.1 += 1;
                             } else {
                                 self.cursor.position.1 = 0;

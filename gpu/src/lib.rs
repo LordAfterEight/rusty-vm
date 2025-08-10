@@ -7,9 +7,9 @@ pub const SCALING: f32 = 1.0;
 
 // NOTE: MEMORY LAYOUT
 // 0x0000 - 0x01FF | STACK (512 16-bit / 1024B)
-// 0x0200 - 0x0219 | A-Z
+// 0x0200 - 0x0219 | A - Z
 // 0x021A - 0x021F | ! " # $ [ ]
-// 0x0220 - 0x0239 | a-z
+// 0x0220 - 0x0239 | a - z
 // 0x023A - 0x023F | / < > = - ~
 // 0x0240 - 0x0249 | 0 - 9
 // 0x024A - 0x024F | : _ | & ? @
@@ -20,7 +20,7 @@ fn window_config() -> macroquad::window::Conf {
     macroquad::window::Conf {
         window_title: "Rusty-VM".to_string(),
         window_width: 960 * SCALING as i32,
-        window_height: 540 * SCALING as i32,
+        window_height: 545 * SCALING as i32,
         window_resizable: false,
         fullscreen: false,
         ..Default::default()
