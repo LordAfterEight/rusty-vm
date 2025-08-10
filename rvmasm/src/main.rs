@@ -117,7 +117,7 @@ fn main() {
                                 let size = parse_hex_lit_num(&instruction, code_line, 2, 0) * 2;
                                 routines[routine_ptr].length = size;
                                 file_systems[fs_ptr].size = size as usize / 2;
-                                println!("  -> Preallocating {} Bytes", size);
+                                println!("  -> Preallocating {} Bytes / {} Addresses", size, size / 2);
                             }
                             _ => panic("Expected \"=\"", &instruction, code_line, 1)
                         }
