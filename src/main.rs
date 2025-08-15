@@ -7,7 +7,7 @@ pub mod opcodes;
 pub const FONT_SIZE: f32 = 12.0;
 
 // NOTE: MEMORY LAYOUT
-// 0x0000 - 0x01FF | UNASSIGNED
+// 0x0000 - 0x01FF | INPUT BUFFER
 // 0x0200 - 0x0219 | A-Z
 // 0x021A - 0x021F | ! " # $ [ ]
 // 0x0220 - 0x0239 | a-z

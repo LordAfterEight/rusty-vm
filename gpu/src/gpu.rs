@@ -245,8 +245,8 @@ impl GPU {
                 opcodes::GPU_RES_F_BUF => {
                     #[cfg(debug_assertions)]
                     crate::debug!("Clearing frame buffer");
-                    for y in 0..48 {
-                        for x in 0..91 {
+                    for y in 0..45 {
+                        for x in 0..136 {
                             self.frame_buffer[x][y].literal = ' ';
                             self.frame_buffer[x][y].fg_color = macroquad::color::BLACK;
                         }

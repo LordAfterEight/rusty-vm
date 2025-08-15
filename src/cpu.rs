@@ -355,14 +355,17 @@ impl CPU {
             }
             HALT_LOOP => {
                 self.halt_flag = true;
+                std::process::exit(0);
                 #[cfg(debug_assertions)]
                 crate::debug!("HALT: ", self.halt_flag);
             }
             _ => {}
         }
 
+        /*
         std::thread::sleep(std::time::Duration::from_micros(
             1_000_000 / self.clock_speed as u64,
         ));
+        */
     }
 }

@@ -141,8 +141,9 @@ fn main() {
                         let register = parse_regs(&instruction, code_line, 1);
                         let instr = match register {
                             0x0041 => opcodes::LOAD_AREG,
-                            0x0058 => opcodes::LOAD_XREG,
-                            0x0059 => opcodes::LOAD_YREG,
+                            0x0042 => opcodes::LOAD_BREG,
+                            0x0043 => opcodes::LOAD_CREG,
+                            0x0044 => opcodes::LOAD_DREG,
                             _ => 0
                         };
                         let value = parse_hex_lit_num(&instruction, code_line, 2, 0);
@@ -153,8 +154,9 @@ fn main() {
                         let register = parse_regs(&instruction, code_line, 1);
                         let instr = match register {
                             0x0041 => opcodes::STOR_AREG,
-                            0x0058 => opcodes::STOR_XREG,
-                            0x0059 => opcodes::STOR_YREG,
+                            0x0042 => opcodes::STOR_BREG,
+                            0x0043 => opcodes::STOR_CREG,
+                            0x0044 => opcodes::STOR_DREG,
                             _ => 0
                         };
                         let addr = parse_hex_lit_num(&instruction, code_line, 2, 0);
@@ -439,7 +441,7 @@ fn return_routine_address(routine_name: &str, routines: &Vec<Routine>) -> u16 {
 fn parse_regs(instruction: &Vec<&str>, code_line: usize, arg_pos: usize) -> u16 {
     let ret = instruction[arg_pos].chars().next().unwrap() as u16;
     match instruction[arg_pos] {
-        "A" | "X" | "Y" => {}
+        "A" | "B" | "C" | "D" => {}
         _ => {
             panic("", &instruction, code_line, 1);
         }

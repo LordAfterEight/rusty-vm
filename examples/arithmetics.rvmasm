@@ -32,6 +32,7 @@ end
 
 # Entry routine. Program will always start here
 routine: entry
+ctrl gpu clear
 load A num 1
 draw str Testing^multiplication... col white
 jusr multiply_loop
