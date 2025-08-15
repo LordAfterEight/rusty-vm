@@ -203,11 +203,7 @@ fn main() {
                                 routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
                                 routines[routine_ptr].instructions.push(0x60);
                                 routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
-
-                                routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
-                                routines[routine_ptr].instructions.push(opcodes::GPU_UPDATE);
-                                routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
-                                gpu_ptr += 2;
+                                gpu_ptr += 1;
                             }
                             _ => panic("", &instruction, code_line, 1)
                         }
