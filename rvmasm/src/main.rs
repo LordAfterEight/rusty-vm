@@ -183,9 +183,8 @@ fn main() {
                                     }
                                 }
                                 routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
-                                routines[routine_ptr].instructions.push(opcodes::GPU_DRAW_LETT);
+                                routines[routine_ptr].instructions.push(opcodes::GPU_DRAW_TEXT);
                                 routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
-                                routines[routine_ptr].instructions.push(gpu_ptr as u16);
                                 gpu_ptr += 1;
 
                                 let string = instruction[2];
@@ -198,19 +197,16 @@ fn main() {
                                     routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
                                     routines[routine_ptr].instructions.push(out_word);
                                     routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
-                                    routines[routine_ptr].instructions.push(gpu_ptr as u16);
                                     gpu_ptr += 1;
                                 }
 
                                 routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
                                 routines[routine_ptr].instructions.push(0x60);
                                 routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
-                                routines[routine_ptr].instructions.push(gpu_ptr as u16);
 
                                 routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
                                 routines[routine_ptr].instructions.push(opcodes::GPU_UPDATE);
                                 routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
-                                routines[routine_ptr].instructions.push(gpu_ptr as u16 + 1);
                                 gpu_ptr += 2;
                             }
                             _ => panic("", &instruction, code_line, 1)
@@ -229,12 +225,10 @@ fn main() {
                         routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
                         routines[routine_ptr].instructions.push(instr);
                         routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
-                        routines[routine_ptr].instructions.push(gpu_ptr as u16);
 
                         routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
                         routines[routine_ptr].instructions.push(opcodes::GPU_UPDATE);
                         routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
-                        routines[routine_ptr].instructions.push(gpu_ptr as u16 + 1);
                         gpu_ptr += 2;
                     }
                     "ctrl" => {
@@ -250,7 +244,6 @@ fn main() {
                                 routines[routine_ptr].instructions.push(opcodes::LOAD_GREG);
                                 routines[routine_ptr].instructions.push(instr);
                                 routines[routine_ptr].instructions.push(opcodes::STOR_GREG);
-                                routines[routine_ptr].instructions.push(gpu_ptr as u16);
                                 gpu_ptr += 1;
                             }
                             "cpu" => {
